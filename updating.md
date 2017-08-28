@@ -5,6 +5,8 @@
     - Copy the url to the `.tar.gz` and `wget ...`
 1. `git checkout upstream` to make sure the upstream branch is available
 1. `gbp import-orig --pristine-tar ../path/to/source`
+    - When answering the questions **make sure** to change the source package
+      name to the package you are building
 1. `git push origin HEAD --tags`
 1. `git checkout pristine-tar && git push origin HEAD`
 
