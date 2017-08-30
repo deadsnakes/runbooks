@@ -1,0 +1,56 @@
+#!/usr/bin/env python3.6
+import argparse
+import os.path
+import shutil
+import subprocess
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--source', action='store_true')
+    args = parser.parse_args()
+
+    print('*' * 79)
+    print('Parsing target distribution')
+    print('*' * 79)
+    dist = subprocess.check_output((
+        'dpkg-parsechangelog', '--show-field=distribution',
+        '--file=debian/changelog',
+    )).decode().strip()
+
+    tag = f'{dist}-deadsnakes'
+    print('*' * 79)
+    print(f'Building image (tag: {tag})')
+    print('*' * 79)
+    with open(os.path.join(HERE, f'Dockerfile.{dist}'), 'rb') as f:
+        subprocess.check_call(('docker', 'build', '-t', tag, '-'), stdin=f)
+
+    print('*' * 79)
+    print('Running build (results will be in ../dist)')
+    print('*' * 79)
+    os.makedirs('../dist', exist_ok=True)
+    pwd = os.getcwd()
+    home = os.environ['HOME']
+    extra = '--git-builder="debuild -S"' if args.source else ''
+    prog = (
+        f'cp -r /code /tmp && '
+        f'cd /tmp/code && '
+        f'mk-build-deps --install --remove --tool "apt-get --yes" debian/control && '  # noqa
+        f'gbp buildpackage --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
+        f'cp ../* /dist'
+    )
+    cmd = (
+        'docker', 'run', '-ti',
+        '-v', f'{pwd}:/code:ro',
+        '-v', f'{pwd}/../dist:/dist:rw',
+        '-v', f'{home}/.gnupg:/root/.gnupg:ro',
+        tag, 'bash', '-euxc', prog,
+    )
+    os.execv(shutil.which(cmd[0]), cmd)
+
+
+if __name__ == '__main__':
+    exit(main())
