@@ -30,3 +30,12 @@
 1. `gbp buildpackage --git-debian-branch=ubuntu/xenial` -- alternatively use
    the `build` script included in this repository to build with docker.
 1. If it fails, fix stuff on `master` and start at 1.
+
+## Uploading
+
+1. `rm -rf ../dist`  Ensure the dist directory is gone from previous runs
+1. `../runbooks/build --source` Build the source package
+1. `cd ../dist && dput ppa:deadsnakes/ppa *.changes` Upload to launchpad
+1. `git checkout master && git push origin HEAD`
+1. `git checkout ubuntu/xenial`
+1. `git tag ... && git push origin HEAD --tags`
