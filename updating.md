@@ -27,5 +27,6 @@
 1. `git merge master`
 1. `dch -v ...`
 1. `git add -u && git commit -m ...`
-1. `gbp buildpackage --git-debian-branch=ubuntu/xenial`
+1. `gbp buildpackage --git-debian-branch=ubuntu/xenial` -- alternatively use
+   the `build` script included in this repository to build with docker.
 1. If it fails, fix stuff on `master` and start at 1.
