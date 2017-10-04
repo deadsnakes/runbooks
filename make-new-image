@@ -1,0 +1,77 @@
+#!/usr/bin/env python3.6
+import argparse
+import os.path
+import re
+import shlex
+import subprocess
+import sys
+
+
+DOCKERFILE_MK_BUILD_DEPS = (
+    'FROM ubuntu:{codename}\n'
+    'RUN apt-get update && \\\n'
+    '    DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
+    '        -y --no-install-recommends \\\n'
+    '        devscripts equivs && \\\n'
+    '    apt-get clean'
+)
+
+
+DOCKERFILE_TEMPLATE = (
+    '# Created with `{cmd}` DO NOT EDIT\n'
+    'FROM ubuntu:{codename}\n'
+    'RUN apt-get update && \\\n'
+    '    DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
+    '        -y --no-install-recommends \\\n'
+    '        {packages} \\\n'
+    '    && \\\n'
+    '    apt-get clean'
+)
+
+
+DEPENDS = ' Depends:'
+TO_APT_RE = re.compile('(,| \([^)]+\))')
+
+ALWAYS_DEPS = {'devscripts', 'equivs', 'git-buildpackage', 'pristine-tar'}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--codename', default='xenial')
+    parser.add_argument('control_filename')
+    args = parser.parse_args()
+
+    img = f'make-new-image-{args.codename}'
+    subprocess.run(
+        ('docker', 'build', '-t', img, '-f', '-', '.'),
+        input=DOCKERFILE_MK_BUILD_DEPS.format(codename=args.codename).encode(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=True,
+    )
+
+    lines = subprocess.run(
+        (
+            'docker', 'run',
+            '-v', f'{os.path.abspath(args.control_filename)}:/control:ro',
+            img, 'bash', '-ec',
+            'mk-build-deps /control && '
+            'dpkg -I *.deb | grep "^ Depends:"',
+        ),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    ).stdout.decode().splitlines()
+    depends, = [line for line in lines if line.startswith(' Depends:')]
+    depends = depends[len(DEPENDS):]
+
+    deps = set(TO_APT_RE.sub('', depends).split()) | ALWAYS_DEPS
+
+    print(DOCKERFILE_TEMPLATE.format(
+        cmd=' '.join(shlex.quote(p) for p in sys.argv),
+        codename=args.codename,
+        packages=' \\\n        '.join(sorted(deps)),
+    ))
+
+
+if __name__ == '__main__':
+    exit(main())
