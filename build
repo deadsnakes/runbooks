@@ -11,6 +11,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
+    parser.add_argument('--unsigned', action='store_true')
     args = parser.parse_args()
 
     print('*' * 79)
@@ -34,12 +35,13 @@ def main():
     os.makedirs('../dist', exist_ok=True)
     pwd = os.getcwd()
     home = os.environ['HOME']
+    gbp_args = '-us -uc' if args.unsigned else ''
     extra = '--git-builder="debuild -S"' if args.source else ''
     prog = (
         f'cp -r /code /tmp && '
         f'cd /tmp/code && '
         f'mk-build-deps --install --remove --tool "apt-get --yes" debian/control && '  # noqa
-        f'gbp buildpackage --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
+        f'gbp buildpackage {gbp_args} --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
         f'cp ../* /dist'
     )
     cmd = (
