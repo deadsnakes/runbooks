@@ -1,4 +1,4 @@
-# Created with `./make-new-image ../python3.6/debian/control` DO NOT EDIT
+# Created with `./make-new-image --codename xenial ../python3.6/debian/control` DO NOT EDIT
 FROM ubuntu:xenial
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install \

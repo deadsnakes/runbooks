@@ -52,7 +52,7 @@ def main():
 
     lines = subprocess.run(
         (
-            'docker', 'run',
+            'docker', 'run', '--rm',
             '-v', f'{os.path.abspath(args.control_filename)}:/control:ro',
             img, 'bash', '-ec',
             'mk-build-deps /control && '

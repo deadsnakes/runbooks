@@ -1,7 +1,6 @@
 #!/usr/bin/env python3.6
 import argparse
 import os.path
-import shutil
 import subprocess
 
 
@@ -26,7 +25,7 @@ def main():
     print('*' * 79)
     print(f'Building image (tag: {tag})')
     print('*' * 79)
-    with open(os.path.join(HERE, f'Dockerfile.{dist}'), 'rb') as f:
+    with open(os.path.join(HERE, f'dockerfiles/Dockerfile.{dist}'), 'rb') as f:
         subprocess.check_call(('docker', 'build', '-t', tag, '-'), stdin=f)
 
     print('*' * 79)
@@ -45,13 +44,13 @@ def main():
         f'cp ../* /dist'
     )
     cmd = (
-        'docker', 'run', '-ti',
+        'docker', 'run', '--rm', '-ti',
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
         '-v', f'{home}/.gnupg:/root/.gnupg:ro',
         tag, 'bash', '-euxc', prog,
     )
-    os.execv(shutil.which(cmd[0]), cmd)
+    os.execvp(cmd[0], cmd)
 
 
 if __name__ == '__main__':
