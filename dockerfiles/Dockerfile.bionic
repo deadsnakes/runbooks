@@ -12,6 +12,7 @@ RUN apt-get update && \
         dpkg-dev \
         equivs \
         git-buildpackage \
+        gnupg \
         libbluetooth-dev \
         libbz2-dev \
         libdb-dev \

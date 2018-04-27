@@ -32,7 +32,9 @@ DOCKERFILE_TEMPLATE = (
 DEPENDS = ' Depends:'
 TO_APT_RE = re.compile('(,| \([^)]+\))')
 
-ALWAYS_DEPS = {'devscripts', 'equivs', 'git-buildpackage', 'pristine-tar'}
+ALWAYS_DEPS = {
+    'devscripts', 'equivs', 'git-buildpackage', 'gnupg', 'pristine-tar',
+}
 
 
 def main():
