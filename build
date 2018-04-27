@@ -47,7 +47,8 @@ def main():
         'docker', 'run', '--rm', '-ti',
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
-        '-v', f'{home}/.gnupg:/root/.gnupg:ro',
+        '-v', f'{home}/.gnupg/pubring.gpg:/root/.gnupg/pubring.gpg:ro',
+        '-v', f'{home}/.gnupg/secring.gpg:/root/.gnupg/secring.gpg:ro',
         tag, 'bash', '-euxc', prog,
     )
     os.execvp(cmd[0], cmd)
