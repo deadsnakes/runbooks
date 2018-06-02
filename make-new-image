@@ -9,23 +9,26 @@ import sys
 
 DOCKERFILE_MK_BUILD_DEPS = (
     'FROM ubuntu:{codename}\n'
-    'RUN apt-get update && \\\n'
-    '    DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
+    'RUN : \\\n'
+    '    && apt-get update \\\n'
+    '    && DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
     '        -y --no-install-recommends \\\n'
-    '        devscripts equivs && \\\n'
-    '    apt-get clean'
+    '        devscripts equivs \\\n'
+    '    && apt-get clean \\\n'
+    '    && rm -rf /var/lib/apt/lists/*'
 )
 
 
 DOCKERFILE_TEMPLATE = (
     '# Created with `{cmd}` DO NOT EDIT\n'
     'FROM ubuntu:{codename}\n'
-    'RUN apt-get update && \\\n'
-    '    DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
+    'RUN : \\\n'
+    '    && apt-get update \\\n'
+    '    && DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
     '        -y --no-install-recommends \\\n'
     '        {packages} \\\n'
-    '    && \\\n'
-    '    apt-get clean'
+    '    && apt-get clean \\\n'
+    '    && rm -rf /var/lib/apt/lists/*'
 )
 
 
