@@ -2,12 +2,13 @@
 import argparse
 import os.path
 import subprocess
+from typing import NoReturn
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-def main():
+def main() -> NoReturn:
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
     parser.add_argument('--unsigned', action='store_true')
@@ -52,6 +53,7 @@ def main():
         tag, 'bash', '-euxc', prog,
     )
     os.execvp(cmd[0], cmd)
+    raise SystemError('https://github.com/python/typeshed/pull/2226')
 
 
 if __name__ == '__main__':

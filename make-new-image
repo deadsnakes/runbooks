@@ -40,7 +40,7 @@ ALWAYS_DEPS = {
 }
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--codename', default='xenial')
     parser.add_argument('control_filename')
@@ -76,6 +76,7 @@ def main():
         codename=args.codename,
         packages=' \\\n        '.join(sorted(deps)),
     ))
+    return 0
 
 
 if __name__ == '__main__':

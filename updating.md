@@ -1,16 +1,6 @@
 ## Update the upstream branch
 
-1. download the source from python.org
-    - [downloads page](https://www.python.org/downloads/)
-    - Copy the url to the `.tar.gz` and `wget ...`
-1. `git checkout upstream` to make sure the upstream branch is available
-1. `gbp import-orig --pristine-tar ../path/to/source`
-    - When answering the questions **make sure** to change the source package
-      name to the package you are building (such as `python3.6`)
-    - For pre-release versions, `gbp` will guess incorrectly, be sure to prefix
-      the `beta` / `alpha` version with `~`.
-1. `git checkout upstream && git push origin HEAD --tags`
-1. `git checkout pristine-tar && git push origin HEAD`
+1. `../runbooks/import-upstream <VERSION>`
 
 ## Create patch queue branch
 
