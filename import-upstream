@@ -1,0 +1,83 @@
+#!/usr/bin/env python3.6
+import argparse
+import os
+import re
+import subprocess
+import tempfile
+from typing import NamedTuple
+
+
+VERSION_RE = re.compile('^(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?$')
+
+
+class Version(NamedTuple):
+    version: str
+    extra: str
+
+    @property
+    def is_prerelease(self) -> bool:
+        return bool(self.extra)
+
+    @property
+    def pkg_name(self) -> str:
+        minor = '.'.join(self.version.split('.')[:2])
+        return f'python{minor}'
+
+    @property
+    def debian_version(self) -> str:
+        extra = f'~{self.extra}' if self.extra else ''
+        return f'{self.version}{extra}'
+
+    @property
+    def filename(self) -> str:
+        return f'{self.pkg_name}_{self.debian_version}.tgz'
+
+    @property
+    def download_url(self) -> str:
+        extra = self.extra or ''
+        return (
+            f'https://www.python.org/ftp/python/{self.version}/'
+            f'Python-{self.version}{extra}.tgz'
+        )
+
+    @classmethod
+    def parse(cls, s: str) -> 'Version':
+        match = VERSION_RE.match(s)
+        if not match:
+            raise argparse.ArgumentTypeError(
+                'Expected #.#.# or #.#.#(a|b|rc)#',
+            )
+        ret = Version(*match.groups())
+        if os.path.basename(os.getcwd()) != ret.pkg_name:
+            raise argparse.ArgumentTypeError(f'`cd` to {ret.pkg_name} repo')
+        return ret
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('version', type=Version.parse)
+    args = parser.parse_args()
+
+    print('ensuring branches available...')
+    subprocess.check_output(('git', 'checkout', '-q', 'pristine-tar'))
+    subprocess.check_output(('git', 'checkout', '-q', 'upstream'))
+
+    print('downloading src...')
+    with tempfile.TemporaryDirectory() as td:
+        dest = os.path.join(td, args.version.filename)
+        subprocess.check_call((
+            'wget', args.version.download_url, '--output-document', dest,
+        ))
+
+        subprocess.check_call((
+            'gbp', 'import-orig', dest, '--pristine-tar', '--no-interactive',
+            '--no-symlink-orig', '--no-merge',
+        ))
+
+    print('pushing new branches...')
+    cmd = ('git', 'push', 'origin', 'pristine-tar', 'upstream', '--tags')
+    return subprocess.check_call(cmd)
+
+
+if __name__ == '__main__':
+    exit(main())
