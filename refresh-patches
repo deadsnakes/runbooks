@@ -44,7 +44,7 @@ def main() -> int:
 
     cmd = ('git', 'log', '-1', '--format=%s', 'upstream')
     version = subprocess.check_output(cmd).decode().split()[-1]
-    _quiet('sed', '-i', f's/^SVER=.*$/{version}/g', 'debian/rules')
+    _quiet('sed', '-i', f's/^SVER=.*$/SVER={version}/g', 'debian/rules')
     _quiet('git', 'commit', '-am', f'Update SVER to {version}')
     print(f'- SVER updated to {version}')
 
