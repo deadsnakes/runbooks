@@ -1,0 +1,67 @@
+#!/usr/bin/env python3.6
+import argparse
+import os
+import subprocess
+
+
+def _release_message(version: str) -> str:
+    version, _, prerelease = version.partition('~')
+    msg = f'Python {version}'
+    for s, w in (('a', 'alpha'), ('b', 'beta'), ('rc', 'release candidate')):
+        if prerelease.startswith(s):
+            release = '' if s == 'rc' else ' release'
+            return f'{msg} {w} {prerelease[len(s):]}{release}.'
+    else:
+        return f'{msg} release.'
+
+
+def _quiet(*cmd: str) -> None:
+    subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('branch_name')
+    args = parser.parse_args()
+
+    _quiet('git', 'checkout', '-q', args.branch_name)
+    _quiet('gbp', 'pq', 'import')
+    _quiet('git', 'checkout', '-q', args.branch_name)
+    _quiet('git', 'merge', '--no-edit', 'upstream')
+    if subprocess.call(('gbp', 'pq', 'rebase')):
+        print('*' * 79)
+        print('Did not rebase cleanly!')
+        print('- to cancel: `git rebase --abort` and `exit 1`')
+        print('- to continue: resolve the rebase conflicts and `exit 0`')
+        print('*' * 79)
+        ret = subprocess.call(os.environ.get('SHELL', 'bash'))
+        if ret:
+            return ret
+    _quiet('gbp', 'pq', 'export')
+    _quiet('git', 'add', 'debian/patches')
+    _quiet('git', 'commit', '-m', 'Refresh patches.')
+    print('- patches refreshed')
+
+    cmd = ('git', 'log', '-1', '--format=%s', 'upstream')
+    version = subprocess.check_output(cmd).decode().split()[-1]
+    _quiet('sed', '-i', f's/^SVER=.*$/{version}/g', 'debian/rules')
+    _quiet('git', 'commit', '-am', f'Update SVER to {version}')
+    print(f'- SVER updated to {version}')
+
+    dist = subprocess.check_output((
+        'dpkg-parsechangelog', '--show-field=distribution',
+        '--file=debian/changelog',
+    )).decode().strip()
+    debian_version = f'{version}-1+{dist}1'
+    _quiet(
+        'dch', '--newversion', debian_version, '--release-heuristic=log',
+        _release_message(version),
+    )
+    _quiet('git', 'commit', '-am', f'Finish changelog for {debian_version}')
+    print('- changelog finished')
+
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())
