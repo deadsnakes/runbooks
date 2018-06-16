@@ -50,7 +50,6 @@ def main() -> int:
 
     dist = subprocess.check_output((
         'dpkg-parsechangelog', '--show-field=distribution',
-        '--file=debian/changelog',
     )).decode().strip()
     debian_version = f'{version}-1+{dist}1'
     _quiet(

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3.6
+import os.path
+import subprocess
+
+
+def main() -> int:
+    subprocess.check_call(('rm', '-rf', '../dist'))
+    build = os.path.join(os.path.dirname(__file__), 'build')
+    subprocess.check_call((build, '--source'))
+
+    cfs = [f for f in os.listdir('../dist') if f.endswith('.changes')]
+    subprocess.check_call(('dput', 'ppa:deadsnakes/ppa', *cfs), cwd='../dist')
+
+    cmd = ('dpkg-parsechangelog', '--show-field=version')
+    version = subprocess.check_output(cmd).decode().strip().replace('~', '_')
+    subprocess.check_call(('git', 'tag', f'debian/{version}'))
+    subprocess.check_call(('git', 'push', 'origin', 'HEAD', '--tags'))
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())
