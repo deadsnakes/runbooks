@@ -1,0 +1,11 @@
+FROM ubuntu:xenial
+RUN : \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install \
+        -y --no-install-recommends \
+        git-buildpackage \
+        pristine-tar \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME=/homedir
+WORKDIR /tmp/src
