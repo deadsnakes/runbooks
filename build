@@ -52,7 +52,6 @@ def main() -> NoReturn:
         tag, 'bash', '-euxc', prog,
     )
     os.execvp(cmd[0], cmd)
-    raise SystemError('https://github.com/python/typeshed/pull/2226')
 
 
 if __name__ == '__main__':
