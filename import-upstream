@@ -8,7 +8,7 @@ from typing import NamedTuple
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION_RE = re.compile('^(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?$')
+VERSION_RE = re.compile(r'^(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?$')
 
 
 class Version(NamedTuple):
