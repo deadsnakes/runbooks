@@ -1,0 +1,44 @@
+#!/usr/bin/env python3.6
+import argparse
+import os.path
+import subprocess
+import tempfile
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+
+def _quiet(*cmd: str) -> None:
+    subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--branch-name', default='ubuntu/bionic')
+    parser.add_argument('dsc')
+    args = parser.parse_args()
+
+    print('downloading src...')
+    with tempfile.TemporaryDirectory() as td:
+        cmd = ('dget', '--allow-unauthenticated', '--download-only', args.dsc)
+        subprocess.check_call(cmd, cwd=td)
+        dsc, = [f for f in os.listdir(td) if f.endswith('.dsc')]
+
+        subprocess.check_call((
+            os.path.join(HERE, 'gbp'), '--volume', f'{td}:{td}:ro',
+            'import-dsc', os.path.join(td, dsc),
+            '--pristine-tar', '--debian-branch', args.branch_name,
+        ))
+
+    _quiet('git', 'checkout', '-q', args.branch_name)
+    _quiet('gbp', 'pq', 'import')
+    _quiet('git', 'checkout', '-q', args.branch_name)
+    _quiet('git', 'merge', '--no-edit', 'upstream')
+    _quiet('gbp', 'pq', 'rebase')
+    _quiet('gbp', 'pq', 'export')
+    _quiet('git', 'add', 'debian/patches')
+    _quiet('git', 'commit', '-m', 'Refresh patches.')
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())

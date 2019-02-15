@@ -6,7 +6,6 @@ import subprocess
 import tempfile
 from typing import NamedTuple
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 VERSION_RE = re.compile(r'^(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?$')
 
@@ -59,14 +58,6 @@ def main() -> int:
     parser.add_argument('version', type=Version.parse)
     args = parser.parse_args()
 
-    # pristine-tar on bionic is too new for xenial
-    print('building gbp docker image...')
-    subprocess.check_call((
-        'docker', 'build', '-q', '-t', 'deadsnakes-gbp',
-        '-f', os.path.join(HERE, 'dockerfiles/Dockerfile.gbp'),
-        HERE,
-    ))
-
     print('ensuring branches available...')
     subprocess.check_output(('git', 'checkout', '-q', 'pristine-tar'))
     subprocess.check_output(('git', 'checkout', '-q', 'upstream'))
@@ -78,15 +69,10 @@ def main() -> int:
             'wget', args.version.download_url, '--output-document', dest,
         ))
 
-        gitconfig = os.path.expanduser('~/.gitconfig')
         subprocess.check_call((
-            'docker', 'run', '-ti',
+            os.path.join(HERE, 'gbp'),
             '--volume', f'{dest}:{dest}:ro',
-            '--volume', f'{gitconfig}:/homedir/.gitconfig:ro',
-            '--volume', f'{os.getcwd()}:/tmp/src:rw',
-            '--user', f'{os.getuid()}:{os.getgid()}',
-            'deadsnakes-gbp',
-            'gbp', 'import-orig', dest, '--pristine-tar', '--no-interactive',
+            'import-orig', dest, '--pristine-tar', '--no-interactive',
             '--no-symlink-orig', '--no-merge',
         ))
 

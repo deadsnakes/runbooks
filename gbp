@@ -1,0 +1,36 @@
+#!/usr/bin/env python3.6
+import argparse
+import os.path
+import subprocess
+from typing import NoReturn
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+
+def main() -> NoReturn:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--volume', dest='volumes', action='append')
+    args, rest = parser.parse_known_args()
+
+    # pristine-tar on bionic is too new for xenial
+    print('building gbp docker image...')
+    subprocess.check_call((
+        'docker', 'build', '-q', '-t', 'deadsnakes-gbp',
+        '-f', os.path.join(HERE, 'dockerfiles/Dockerfile.gbp'),
+        HERE,
+    ))
+
+    gitconfig = os.path.expanduser('~/.gitconfig')
+    cmd = (
+        'docker', 'run', '--rm', '-ti',
+        '--volume', f'{gitconfig}:/homedir/.gitconfig:ro',
+        '--volume', f'{os.getcwd()}:/tmp/src:rw',
+        '--user', f'{os.getuid()}:{os.getgid()}',
+        *(f'--volume={volume}' for volume in args.volumes),
+        'deadsnakes-gbp', 'gbp', *rest,
+    )
+    os.execvp(cmd[0], cmd)
+
+
+if __name__ == '__main__':
+    exit(main())
