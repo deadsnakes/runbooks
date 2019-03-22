@@ -71,11 +71,13 @@ def main() -> int:
 
     deps = set(TO_APT_RE.sub('', depends).split()) | ALWAYS_DEPS
 
-    print(DOCKERFILE_TEMPLATE.format(
-        cmd=' '.join(shlex.quote(p) for p in sys.argv),
-        codename=args.codename,
-        packages=' \\\n        '.join(sorted(deps)),
-    ))
+    print(
+        DOCKERFILE_TEMPLATE.format(
+            cmd=' '.join(shlex.quote(p) for p in sys.argv),
+            codename=args.codename,
+            packages=' \\\n        '.join(sorted(deps)),
+        ),
+    )
     return 0
 
 
