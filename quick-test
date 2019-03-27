@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+import argparse
+import os
+from typing import NoReturn
+
+PROG = '''\
+inst() {{
+    dpkg -i "/dist/$1"_* || true
+    apt-get install -yf
+    dpkg -l | grep "$1"
+}}
+
+apt-get update
+inst libpython{ver}-minimal
+inst libpython{ver}-stdlib
+inst libpython{ver}
+inst python{ver}-minimal
+inst python{ver}
+
+python{ver} -c 'import cmath, ssl'
+# distutils.__init__ and distutils.version should be in main lib package
+python{ver} -c 'import distutils; assert distutils.__file__'
+python{ver} -c 'import distutils.version'
+'''
+
+
+def main() -> NoReturn:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--distrib-codename', default='bionic')
+    parser.add_argument('--dist-dir', default='../dist')
+    parser.add_argument('--src-dir', default='.')
+    args = parser.parse_args()
+
+    src = os.path.abspath(args.src_dir)
+    cmd = (
+        'docker', 'run', '--rm',
+        '-v', f'{os.path.abspath(args.dist_dir)}:/dist:ro',
+        f'ubuntu:{args.distrib_codename}',
+        'bash', '-euxc', PROG.format(ver=os.path.basename(src)[-3:]),
+    )
+    os.execvp(cmd[0], cmd)
+
+
+if __name__ == '__main__':
+    exit(main())
