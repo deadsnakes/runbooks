@@ -40,8 +40,14 @@ RUN : \
         texinfo \
         time \
         tk-dev \
+        virtualenv \
         xauth \
         xvfb \
         zlib1g-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+# git-buildpackage is too old on xenial
+RUN : \
+    && virtualenv /venv -ppython3 \
+    && /venv/bin/pip install gbp==0.9.8 \
+    && ln -s /venv/bin/gbp /usr/local/bin/
