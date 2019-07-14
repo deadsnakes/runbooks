@@ -6,11 +6,11 @@ from typing import NoReturn
 PROG = '''\
 inst() {{
     dpkg -i "/dist/$1"_* || true
-    apt-get install -yf
+    apt-get install -qq -yf
     dpkg -l | grep "$1"
 }}
 
-apt-get update
+apt-get update -qq
 inst libpython{ver}-minimal
 inst libpython{ver}-stdlib
 inst libpython{ver}

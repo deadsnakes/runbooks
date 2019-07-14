@@ -1,9 +1,9 @@
 # Created with `./make-new-image --codename bionic ../python3.7/debian/control` DO NOT EDIT
 FROM ubuntu:bionic
 RUN : \
-    && apt-get update \
+    && apt-get update -qq \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
-        -y --no-install-recommends \
+        -qq -y --no-install-recommends \
         autoconf \
         blt-dev \
         build-essential:amd64 \

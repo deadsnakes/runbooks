@@ -1,8 +1,8 @@
 FROM ubuntu:xenial
 RUN : \
-    && apt-get update \
+    && apt-get update -qq \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
-        -y --no-install-recommends \
+        -qq -y --no-install-recommends \
         git-buildpackage \
         pristine-tar \
     && apt-get clean \

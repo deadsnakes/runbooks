@@ -15,7 +15,7 @@ def main() -> NoReturn:
     # pristine-tar on bionic is too new for xenial
     print('building gbp docker image...')
     subprocess.check_call((
-        'docker', 'build', '-q', '-t', 'deadsnakes-gbp',
+        'docker', 'build', '-qt', 'deadsnakes-gbp',
         '-f', os.path.join(HERE, 'dockerfiles/Dockerfile.gbp'),
         HERE,
     ))

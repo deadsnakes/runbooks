@@ -10,9 +10,9 @@ import sys
 DOCKERFILE_MK_BUILD_DEPS = (
     'FROM ubuntu:{codename}\n'
     'RUN : \\\n'
-    '    && apt-get update \\\n'
+    '    && apt-get update -qq \\\n'
     '    && DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
-    '        -y --no-install-recommends \\\n'
+    '        -qq -y --no-install-recommends \\\n'
     '        devscripts equivs \\\n'
     '    && apt-get clean \\\n'
     '    && rm -rf /var/lib/apt/lists/*'
@@ -23,9 +23,9 @@ DOCKERFILE_TEMPLATE = (
     '# Created with `{cmd}` DO NOT EDIT\n'
     'FROM ubuntu:{codename}\n'
     'RUN : \\\n'
-    '    && apt-get update \\\n'
+    '    && apt-get update -qq \\\n'
     '    && DEBIAN_FRONTEND=noninteractive apt-get install \\\n'
-    '        -y --no-install-recommends \\\n'
+    '        -qq -y --no-install-recommends \\\n'
     '        {packages} \\\n'
     '    && apt-get clean \\\n'
     '    && rm -rf /var/lib/apt/lists/*'
@@ -48,7 +48,7 @@ def main() -> int:
 
     img = f'make-new-image-{args.codename}'
     subprocess.run(
-        ('docker', 'build', '-t', img, '-f', '-', '.'),
+        ('docker', 'build', '-qt', img, '-f', '-', '.'),
         input=DOCKERFILE_MK_BUILD_DEPS.format(codename=args.codename).encode(),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

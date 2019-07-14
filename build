@@ -26,7 +26,7 @@ def main() -> NoReturn:
     print(f'Building image (tag: {tag})')
     print('*' * 79)
     with open(os.path.join(HERE, f'dockerfiles/Dockerfile.{dist}'), 'rb') as f:
-        subprocess.check_call(('docker', 'build', '-t', tag, '-'), stdin=f)
+        subprocess.check_call(('docker', 'build', '-qt', tag, '-'), stdin=f)
 
     print('*' * 79)
     print('Running build (results will be in ../dist)')
@@ -46,7 +46,7 @@ def main() -> NoReturn:
         f'cd /tmp/code && '
         f'git config --global user.name "Anthony Sottile" && '
         f'git config --global user.email "asottile@umich.edu" && '
-        # f'apt-get update && '
+        f'apt-get update -qq && '
         f'mk-build-deps --install --remove --tool "apt-get --yes" debian/control && '  # noqa
         f'gbp buildpackage {gbp_args} --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
         f'find .. -maxdepth 1 -type f | xargs --replace cp {{}} /dist'
