@@ -11,6 +11,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 def main() -> NoReturn:
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
+    parser.add_argument('--git-build', action='store_true')
     args = parser.parse_args()
 
     print('*' * 79)
@@ -34,10 +35,17 @@ def main() -> NoReturn:
     pwd = os.getcwd()
     home = os.environ['HOME']
     gbp_args = '' if args.source else '-us -uc'
+    gbp_args += (
+        '' if not args.git_build else
+        ' --git-pristine-tar-commit '
+        "--git-upstream-tag='deadsnakes/v%(version%~%_)s'"
+    )
     extra = '--git-builder="debuild -S"' if args.source else ''
     prog = (
         f'cp -r /code /tmp && '
         f'cd /tmp/code && '
+        f'git config --global user.name "Anthony Sottile" && '
+        f'git config --global user.email "asottile@umich.edu" && '
         # f'apt-get update && '
         f'mk-build-deps --install --remove --tool "apt-get --yes" debian/control && '  # noqa
         f'gbp buildpackage {gbp_args} --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
