@@ -10,11 +10,16 @@ inst() {{
     dpkg -l | grep "$1"
 }}
 
+. /etc/lsb-release
+
 apt-get update -qq
 inst libpython{ver}-minimal
 inst libpython{ver}-stdlib
 inst libpython{ver}
 inst python{ver}-minimal
+if [ "$DISTRIB_CODENAME" = xenial -a {ver} = 3.7 ]; then
+    inst libpython{ver}-distutils
+fi
 inst python{ver}
 
 python{ver} -c 'import cmath, ssl'
