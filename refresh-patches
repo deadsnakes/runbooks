@@ -39,7 +39,7 @@ def main() -> int:
             return ret
     _quiet('gbp', 'pq', 'export')
     _quiet('git', 'add', 'debian/patches')
-    if subprocess.call(('git', 'diff', '--quiet')):
+    if subprocess.call(('git', 'diff', '--staged', '--quiet')):
         _quiet('git', 'commit', '-m', 'Refresh patches.')
     print('- patches refreshed')
 
