@@ -5,7 +5,7 @@ from typing import NoReturn
 
 PROG = '''\
 inst() {{
-    dpkg -i "/dist/$1"_* || true
+    dpkg -i "/dist/$1"_*.deb || true
     apt-get install -qq -yf
     dpkg -l | grep "$1"
 }}
