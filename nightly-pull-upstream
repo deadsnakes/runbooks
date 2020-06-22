@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import re
+import subprocess
+
+VERSION_RE = re.compile(r'^v(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?(.*)$')
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('repo')
+    parser.add_argument('version')
+    args = parser.parse_args()
+
+    os.chdir(args.repo)
+
+    if subprocess.call(('git', 'config', 'remote.cpython.url')):
+        subprocess.check_call((
+            'git', 'remote', 'add',
+            'cpython', 'https://github.com/python/cpython',
+        ))
+
+    def _fetch_upstream(branch: str) -> None:
+        subprocess.check_call((
+            'git', 'fetch', 'cpython',
+            f'refs/heads/{branch}:refs/heads/upstream',
+        ))
+
+    try:
+        _fetch_upstream(args.version)
+    except subprocess.CalledProcessError:
+        _fetch_upstream('master')
+
+    # delete all of the deadsnakes tags so they are not considered
+    for tag in subprocess.check_output(('git', 'tag', '--list')).splitlines():
+        if tag.startswith(b'deadsnakes/'):
+            subprocess.check_call(
+                ('git', 'tag', '-d', tag), stdout=subprocess.DEVNULL,
+            )
+
+    tag_cmd = ('git', 'describe', '--tags', 'upstream')
+    current_tag = subprocess.check_output(tag_cmd).decode().strip()
+    v_match = VERSION_RE.match(current_tag)
+    if not v_match:
+        raise SystemExit(f'Unexpected tag: {current_tag}')
+    if v_match[2]:  # if it is a pre-release
+        new_tag = f'deadsnakes/v{v_match[1]}_{v_match[2]}{v_match[3]}'
+    else:
+        new_tag = f'deadsnakes/v{v_match[1]}{v_match[3]}'
+
+    subprocess.check_call(('git', 'tag', new_tag, 'upstream'))
+    subprocess.check_call(('git', 'push', 'origin', 'upstream', new_tag))
+
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())
