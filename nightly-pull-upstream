@@ -50,7 +50,7 @@ def main() -> int:
         new_tag = f'deadsnakes/v{v_match[1]}{v_match[3]}'
 
     subprocess.check_call(('git', 'tag', new_tag, 'upstream'))
-    subprocess.check_call(('git', 'push', 'origin', 'upstream', new_tag))
+    subprocess.check_call(('git', 'push', 'origin', 'upstream', '--tags'))
 
     return 0
 
