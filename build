@@ -22,12 +22,11 @@ def main() -> NoReturn:
         'dpkg-parsechangelog', '--show-field=distribution',
     )).decode().strip()
 
-    tag = f'{dist}-deadsnakes'
+    tag = f'deadsnakes/deadsnakes-{dist}'
     print('*' * 79)
-    print(f'Building image (tag: {tag})')
+    print(f'Pulling image (tag: {tag})')
     print('*' * 79)
-    with open(os.path.join(HERE, f'dockerfiles/Dockerfile.{dist}'), 'rb') as f:
-        subprocess.check_call(('docker', 'build', '-qt', tag, '-'), stdin=f)
+    subprocess.check_call((os.path.join(HERE, 'pull-image'), tag))
 
     print('*' * 79)
     print('Running build (results will be in ../dist)')

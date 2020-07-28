@@ -5,6 +5,7 @@ import subprocess
 from typing import NoReturn
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+IMG = 'deadsnakes/deadsnakes-gbp'
 
 
 def main() -> NoReturn:
@@ -13,12 +14,7 @@ def main() -> NoReturn:
     args, rest = parser.parse_known_args()
 
     # pristine-tar on bionic is too new for xenial
-    print('building gbp docker image...')
-    subprocess.check_call((
-        'docker', 'build', '-qt', 'deadsnakes-gbp',
-        '-f', os.path.join(HERE, 'dockerfiles/Dockerfile.gbp'),
-        HERE,
-    ))
+    subprocess.check_call((os.path.join(HERE, 'pull-image'), IMG))
 
     gitconfig = os.path.expanduser('~/.gitconfig')
     cmd = (
@@ -27,7 +23,7 @@ def main() -> NoReturn:
         '--volume', f'{os.getcwd()}:/tmp/src:rw',
         '--user', f'{os.getuid()}:{os.getgid()}',
         *(f'--volume={volume}' for volume in args.volumes),
-        'deadsnakes-gbp', 'gbp', *rest,
+        IMG, 'gbp', *rest,
     )
     os.execvp(cmd[0], cmd)
 
