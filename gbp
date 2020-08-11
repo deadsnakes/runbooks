@@ -21,7 +21,6 @@ def main() -> NoReturn:
         'docker', 'run', '--rm', '-ti',
         '--volume', f'{gitconfig}:/homedir/.gitconfig:ro',
         '--volume', f'{os.getcwd()}:/tmp/src:rw',
-        '--user', f'{os.getuid()}:{os.getgid()}',
         *(f'--volume={volume}' for volume in args.volumes),
         IMG, 'gbp', *rest,
     )
