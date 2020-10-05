@@ -26,7 +26,7 @@ def main() -> NoReturn:
     new_lines = []
     i = 0
     for line in patch_lines:
-        if line.startswith(' ') and not line.startswith('  ('):
+        if line.startswith(' ') and not line.startswith(('  (', ' libpython')):
             symbol, _ = line.split()
 
             new_lines.append(lines[i])
