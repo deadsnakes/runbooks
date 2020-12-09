@@ -13,6 +13,12 @@ def main() -> NoReturn:
         else:
             raise SystemExit('SVER not found')
 
+    with open('debian/libPVER.symbols.in') as f:
+        pver_diff_lines = tuple(
+            f' {line.split("@")[0]}@'
+            for line in f if line.startswith(' ')
+        )
+
     with open('debian/libpython.symbols.in') as f:
         lines = tuple(f)
 
@@ -26,6 +32,9 @@ def main() -> NoReturn:
     new_lines = []
     i = 0
     for line in patch_lines:
+        if line.startswith(pver_diff_lines):
+            continue
+
         if line.startswith(' ') and not line.startswith(('  (', ' libpython')):
             symbol, _ = line.split()
 
