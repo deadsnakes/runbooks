@@ -13,7 +13,7 @@ def main() -> NoReturn:
     parser.add_argument('-v', '--volume', dest='volumes', action='append')
     args, rest = parser.parse_known_args()
 
-    # pristine-tar on bionic is too new for xenial
+    # TODO: pristine-tar on bionic is too new for xenial
     subprocess.check_call((os.path.join(HERE, 'pull-image'), IMG))
 
     gitconfig = os.path.expanduser('~/.gitconfig')

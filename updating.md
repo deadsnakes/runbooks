@@ -4,7 +4,7 @@
 
 ## Pull in upstream changes
 
-1. `../runbooks/refresh-patches ubuntu/xenial`
+1. `../runbooks/refresh-patches ubuntu/focal`
 
 ## Verifying
 

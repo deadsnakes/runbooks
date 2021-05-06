@@ -29,6 +29,6 @@ control file.  For example:
 
 ```bash
 ./make-new-image \
-    --codename xenial \
-    ../python3.6/debian/control > dockerfiles/Dockerfile.xenial
+    --codename focal \
+    ../python3.6/debian/control > dockerfiles/Dockerfile.focal
 ```

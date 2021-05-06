@@ -17,10 +17,6 @@ inst libpython{ver}-minimal
 inst libpython{ver}-stdlib
 inst libpython{ver}
 inst python{ver}-minimal
-if [ "$DISTRIB_CODENAME" = xenial -a {ver} = 3.7 ]; then
-    inst python{ver}-lib2to3
-    inst python{ver}-distutils
-fi
 inst python{ver}
 
 python{ver} -c 'import cmath, ssl'
