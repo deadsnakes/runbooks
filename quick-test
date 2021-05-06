@@ -25,10 +25,10 @@ python{ver} -c 'import distutils; assert distutils.__file__'
 python{ver} -c 'import distutils.version'
 
 apt-get install -y --no-install-recommends ca-certificates
-if [
-    "$DISTRIB_CODENAME" = bionic -a {ver} = '3.7' -o
-    "$DISTRIB_CODENAME" = bionic -a {ver} = '3.8' -o
-    "$DISTRIB_CODENAME" = focal -a {ver} = '3.9'
+if [ \
+    "$DISTRIB_CODENAME" = bionic -a {ver} = '3.7' -o \
+    "$DISTRIB_CODENAME" = bionic -a {ver} = '3.8' -o \
+    "$DISTRIB_CODENAME" = focal -a {ver} = '3.9' \
 ]; then
     apt-get install -y --no-install-recommends python3-distutils
 else
