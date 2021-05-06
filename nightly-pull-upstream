@@ -30,7 +30,7 @@ def main() -> int:
     try:
         _fetch_upstream(args.version)
     except subprocess.CalledProcessError:
-        _fetch_upstream('master')
+        _fetch_upstream('main')
 
     # delete all of the deadsnakes tags so they are not considered
     for tag in subprocess.check_output(('git', 'tag', '--list')).splitlines():
