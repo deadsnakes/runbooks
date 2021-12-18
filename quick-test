@@ -41,6 +41,10 @@ python{ver} -c '
 import urllib.request
 exec(urllib.request.urlopen("https://bootstrap.pypa.io/get-pip.py").read())
 '
+test -x /usr/local/bin/pip
+python{ver} -m pip --version
+/usr/local/bin/pip install astpretty
+test -x /usr/local/bin/astpretty
 '''
 
 
