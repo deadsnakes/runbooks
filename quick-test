@@ -45,6 +45,22 @@ test -x /usr/local/bin/pip
 python{ver} -m pip --version
 /usr/local/bin/pip install astpretty
 test -x /usr/local/bin/astpretty
+
+cd /tmp
+
+python{ver} -c '
+import shutil
+import urllib.request
+
+resp = urllib.request.urlopen("https://bootstrap.pypa.io/virtualenv.pyz")
+with open("virtualenv.pyz", "wb") as f:
+    shutil.copyfileobj(resp, f)
+'
+python{ver} virtualenv.pyz venv
+test -x venv/bin/pip
+test -d venv/lib/python{ver}/site-packages
+venv/bin/pip install astpretty
+test -x venv/bin/astpretty
 '''
 
 
