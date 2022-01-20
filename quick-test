@@ -11,6 +11,7 @@ inst() {{
 }}
 
 . /etc/lsb-release
+export DEBIAN_FRONTEND=noninteractive
 
 apt-get update -qq
 inst libpython{ver}-minimal
@@ -20,21 +21,24 @@ inst python{ver}-minimal
 inst python{ver}
 
 python{ver} -c 'import cmath, ssl'
-# distutils.__init__ and distutils.version should be in main lib package
-python{ver} -c 'import distutils; assert distutils.__file__'
-python{ver} -c 'import distutils.version'
 
 apt-get install -y --no-install-recommends ca-certificates
 if [ \
     "$DISTRIB_CODENAME" = bionic -a {ver} = '3.7' -o \
     "$DISTRIB_CODENAME" = bionic -a {ver} = '3.8' -o \
-    "$DISTRIB_CODENAME" = focal -a {ver} = '3.9' \
+    "$DISTRIB_CODENAME" = focal -a {ver} = '3.9' -o \
+    "$DISTRIB_CODENAME" = jammy -a {ver} = '3.9' -o \
+    "$DISTRIB_CODENAME" = jammy -a {ver} = '3.10' \
 ]; then
     apt-get install -y --no-install-recommends python3-distutils
 else
     inst python{ver}-lib2to3
     inst python{ver}-distutils
 fi
+
+# distutils.__init__ and distutils.version should be in main lib package
+python{ver} -c 'import distutils; assert distutils.__file__'
+python{ver} -c 'import distutils.version'
 
 # make sure get-pip.py works
 python{ver} -c '
