@@ -48,6 +48,7 @@ def main() -> NoReturn:
         f'git config --global user.email "asottile@umich.edu" && '
         f'apt-get update -qq && '
         f'mk-build-deps --install --remove --tool "apt-get --yes" debian/control && '  # noqa
+        f'rm -f *.buildinfo *.changes && '
         f'gbp buildpackage {gbp_args} --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
         f'find .. -maxdepth 1 -type f | xargs --replace cp {{}} /dist'
     )
