@@ -34,6 +34,10 @@ def main() -> NoReturn:
         '--gpg-secring', metavar='PATH', default='.gnupg/secring.gpg',
         help='GNUPG private keyring, relative to $HOME (default: %(default)s)',
     )
+    parser.add_argument(
+        '--container-engine', choices=['docker', 'podman'], default='docker',
+        help='Linux containers runner (default: %(default)s)',
+    )
     args = parser.parse_args()
 
     print('*' * 79)
@@ -74,7 +78,7 @@ def main() -> NoReturn:
     )
     interactive = '-ti' if sys.stdin.isatty() else '-i'
     cmd = (
-        'docker', 'run', '--rm', interactive,
+        args.container_engine, 'run', '--rm', interactive,
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
         '-v', f'{home}/{args.gpg_pubring}:/root/{args.gpg_pubring}:ro',

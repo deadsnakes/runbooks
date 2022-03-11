@@ -10,6 +10,10 @@ IMG = 'docker.io/deadsnakes/deadsnakes-gbp'
 
 def main() -> NoReturn:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--container-engine', choices=['docker', 'podman'], default='docker',
+        help='Linux containers runner (default: %(default)s)',
+    )
     parser.add_argument('-v', '--volume', dest='volumes', action='append')
     args, rest = parser.parse_known_args()
 
@@ -18,7 +22,7 @@ def main() -> NoReturn:
 
     gitconfig = os.path.expanduser('~/.gitconfig')
     cmd = (
-        'docker', 'run', '--rm', '-ti',
+        args.container_engine, 'run', '--rm', '-ti',
         '--volume', f'{gitconfig}:/homedir/.gitconfig:ro',
         '--volume', f'{os.getcwd()}:/tmp/src:rw',
         *(f'--volume={volume}' for volume in args.volumes),

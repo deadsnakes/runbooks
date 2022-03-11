@@ -69,6 +69,10 @@ def main() -> NoReturn:
     parser.add_argument('--distrib-codename', default='bionic')
     parser.add_argument('--dist-dir', default='../dist')
     parser.add_argument('--src-dir', default='.')
+    parser.add_argument(
+        '--container-engine', choices=['docker', 'podman'], default='docker',
+        help='Linux containers runner (default: %(default)s)',
+    )
     args = parser.parse_args()
 
     with open(os.path.join(args.src_dir, 'debian/rules')) as f:
@@ -80,7 +84,7 @@ def main() -> NoReturn:
             raise AssertionError('could not find version!')
 
     cmd = (
-        'docker', 'run', '--rm',
+        args.container_engine, 'run', '--rm',
         '-v', f'{os.path.abspath(args.dist_dir)}:/dist:ro',
         f'ubuntu:{args.distrib_codename}',
         'bash', '-euxc', PROG.format(ver=version),

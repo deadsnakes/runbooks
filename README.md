@@ -17,7 +17,7 @@ included in this repository.  For instance:
 ```
 
 `./build` will pick up on the codename specified in `debian/changes` and
-build debian packages using `docker`.
+build debian packages using `docker` or `podman`.
 
 The output will be in `../dist`.
 

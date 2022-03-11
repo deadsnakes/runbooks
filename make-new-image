@@ -43,12 +43,16 @@ ALWAYS_DEPS = {
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--codename', default='focal')
+    parser.add_argument(
+        '--container-engine', choices=['docker', 'podman'], default='docker',
+        help='Linux containers runner (default: %(default)s)',
+    )
     parser.add_argument('control_filename')
     args = parser.parse_args()
 
     img = f'make-new-image-{args.codename}'
     subprocess.run(
-        ('docker', 'build', '-qt', img, '-f', '-', '.'),
+        (args.container_engine, 'build', '-qt', img, '-f', '-', '.'),
         input=DOCKERFILE_MK_BUILD_DEPS.format(codename=args.codename).encode(),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -57,7 +61,7 @@ def main() -> int:
 
     lines = subprocess.run(
         (
-            'docker', 'run', '--rm',
+            args.container_engine, 'run', '--rm',
             '-v', f'{os.path.abspath(args.control_filename)}:/control:ro',
             img, 'bash', '-ec',
             'mk-build-deps /control && '
