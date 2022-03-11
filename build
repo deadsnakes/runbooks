@@ -9,10 +9,31 @@ from typing import NoReturn
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+def git_config_get(key: str) -> str:
+    out = subprocess.check_output(['git', 'config', key], encoding='UTF-8')
+    return out.rstrip('\n')
+
+
 def main() -> NoReturn:
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
     parser.add_argument('--git-build', action='store_true')
+    parser.add_argument(
+        '--name', default=git_config_get('user.name'),
+        help='Name for commits & signatures (default: %(default)s)',
+    )
+    parser.add_argument(
+        '--email', metavar='ADDRESS', default=git_config_get('user.email'),
+        help='Email for commits & signatures (default: %(default)s)',
+    )
+    parser.add_argument(
+        '--gpg-pubring', metavar='PATH', default='.gnupg/pubring.gpg',
+        help='GNUPG public keyring, relative to $HOME (default: %(default)s)',
+    )
+    parser.add_argument(
+        '--gpg-secring', metavar='PATH', default='.gnupg/secring.gpg',
+        help='GNUPG private keyring, relative to $HOME (default: %(default)s)',
+    )
     args = parser.parse_args()
 
     print('*' * 79)
@@ -44,8 +65,8 @@ def main() -> NoReturn:
     prog = (
         f'cp -r /code /tmp && '
         f'cd /tmp/code && '
-        f'git config --global user.name "Anthony Sottile" && '
-        f'git config --global user.email "asottile@umich.edu" && '
+        f'git config --global user.name "{args.name}" && '
+        f'git config --global user.email "{args.email}" && '
         f'apt-get update -qq && '
         f'mk-build-deps --install --remove --tool "apt-get --yes" debian/control && '  # noqa
         f'gbp buildpackage {gbp_args} --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
@@ -56,8 +77,8 @@ def main() -> NoReturn:
         'docker', 'run', '--rm', interactive,
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
-        '-v', f'{home}/.gnupg/pubring.gpg:/root/.gnupg/pubring.gpg:ro',
-        '-v', f'{home}/.gnupg/secring.gpg:/root/.gnupg/secring.gpg:ro',
+        '-v', f'{home}/{args.gpg_pubring}:/root/{args.gpg_pubring}:ro',
+        '-v', f'{home}/{args.gpg_secring}:/root/{args.gpg_secring}:ro',
         tag, 'bash', '-euxc', prog,
     )
     os.execvp(cmd[0], cmd)
