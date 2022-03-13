@@ -21,7 +21,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         cmd = ('dget', '--allow-unauthenticated', '--download-only', args.dsc)
         subprocess.check_call(cmd, cwd=td)
-        dsc, = [f for f in os.listdir(td) if f.endswith('.dsc')]
+        dsc, = (f for f in os.listdir(td) if f.endswith('.dsc'))
 
         subprocess.check_call((
             os.path.join(HERE, 'gbp'), '--volume', f'{td}:{td}:ro',
