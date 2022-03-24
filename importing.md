@@ -10,4 +10,4 @@
 1. Apply similar patches (if needed) as other packages.  [python3.6][python3.6]
    is usually a good place to look.
 
-[python3.6]: https://github.com/deadsnakes/python3.6/commits/master
+[python3.6]: https://github.com/deadsnakes/python3.6/commits/ubuntu/trusty
