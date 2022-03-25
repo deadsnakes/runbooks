@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import os.path
 import re
@@ -41,7 +43,7 @@ class Version(NamedTuple):
         )
 
     @classmethod
-    def parse(cls, s: str) -> 'Version':
+    def parse(cls, s: str) -> Version:
         match = VERSION_RE.match(s)
         if not match:
             raise argparse.ArgumentTypeError(
