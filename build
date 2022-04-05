@@ -24,7 +24,7 @@ def main() -> NoReturn:
         'dpkg-parsechangelog', '--show-field=distribution',
     )).decode().strip()
 
-    tag = f'docker.io/deadsnakes/deadsnakes-{dist}'
+    tag = f'ghcr.io/deadsnakes/{dist}'
     print('*' * 79)
     print(f'Pulling image (tag: {tag})')
     print('*' * 79)

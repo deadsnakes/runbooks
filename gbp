@@ -7,7 +7,7 @@ import subprocess
 from typing import NoReturn
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-IMG = 'docker.io/deadsnakes/deadsnakes-gbp'
+IMG = 'ghcr.io/deadsnakes/gbp'
 
 
 def main() -> NoReturn:
