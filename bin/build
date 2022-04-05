@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import os.path
+import subprocess
+
+
+def main() -> int:
+    for filename in os.listdir('dockerfiles'):
+        _, name = filename.split('.')
+        tag = f'ghcr.io/deadsnakes/{name}:latest'
+        print(f' {tag} '.center(79, '='), flush=True)
+
+        # allow pre-pull to fail
+        pre_pull_ret = subprocess.call(('docker', 'pull', tag))
+
+        with open(os.path.join('dockerfiles', filename), 'rb') as f:
+            cmd = (
+                'docker', 'build',
+                '--pull',
+                *(('--cache-from', tag) if pre_pull_ret == 0 else ()),
+                '--tag', tag,
+                '-',
+            )
+            subprocess.check_call(cmd, stdin=f)
+
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
