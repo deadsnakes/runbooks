@@ -1,0 +1,21 @@
+name: main
+on:
+  pull_request:
+    paths: [dockerfiles/*]
+  push:
+    branches: [main]
+    paths: [dockerfiles/*]
+
+jobs:
+  main:
+    name: main
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+    - run: bin/build
+    - run: bin/push
+      env:
+        GHCR_USER: ${{ github.actor }}
+        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: github.event_name != 'pull_request'
