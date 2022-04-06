@@ -45,11 +45,11 @@ def main() -> NoReturn:
     extra = '--git-builder="debuild -S"' if args.source else ''
     prog = (
         f'cp -r /code /tmp && '
+        f'mk-build-deps --install --remove --tool "apt-get --yes" /tmp/code/debian/control && '  # noqa
         f'cd /tmp/code && '
         f'git config --global user.name "Anthony Sottile" && '
         f'git config --global user.email "asottile@umich.edu" && '
         f'apt-get update -qq && '
-        f'mk-build-deps --install --remove --tool "apt-get --yes" debian/control && '  # noqa
         f'gbp buildpackage {gbp_args} --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
         f'find .. -maxdepth 1 -type f | xargs --replace cp {{}} /dist'
     )
