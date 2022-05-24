@@ -16,6 +16,7 @@
     - `git commit -m 'import debian from previous version'`
     - (replace out the version with the new version)
     - refresh patches
+    - bump the version (to change the package name)
 1. delete non-alpha0 tags
     - `git tag -l | grep -v a0 | xargs git tag -d`
 1. push all the things!
