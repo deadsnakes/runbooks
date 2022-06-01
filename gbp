@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import os.path
 import subprocess
+import sys
 from typing import NoReturn
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -19,8 +20,9 @@ def main() -> NoReturn:
     subprocess.check_call((os.path.join(HERE, 'pull-image'), IMG))
 
     gitconfig = os.path.expanduser('~/.gitconfig')
+    interactive = '-ti' if sys.stdin.isatty() else '-i'
     cmd = (
-        'docker', 'run', '--rm', '-ti',
+        'docker', 'run', '--rm', interactive,
         '--volume', f'{gitconfig}:/homedir/.gitconfig:ro',
         '--volume', f'{os.getcwd()}:/tmp/src:rw',
         *(f'--volume={volume}' for volume in args.volumes),
