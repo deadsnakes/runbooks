@@ -29,6 +29,10 @@ def main() -> int:
 
     os.chdir(args.repo)
 
+    print('ensuring branches available...')
+    _quiet('git', 'checkout', '-q', 'pristine-tar')
+    _quiet('git', 'checkout', '-q', 'upstream')
+
     _quiet('git', 'checkout', '-q', args.branch_name)
     _quiet('gbp', 'pq', 'import')
     _quiet('git', 'checkout', '-q', args.branch_name)
