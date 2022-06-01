@@ -58,7 +58,10 @@ class Version(NamedTuple):
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('version', type=Version.parse)
+    parser.add_argument('--repo', default='.')
     args = parser.parse_args()
+
+    os.chdir(args.repo)
 
     print('ensuring branches available...')
     subprocess.check_output(('git', 'checkout', '-q', 'pristine-tar'))
