@@ -71,7 +71,10 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         dest = os.path.join(td, args.version.filename)
         subprocess.check_call((
-            'wget', args.version.download_url, '--output-document', dest,
+            'wget',
+            '--quiet',
+            '--output-document', dest,
+            args.version.download_url,
         ))
 
         subprocess.check_call((
