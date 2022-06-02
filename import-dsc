@@ -28,6 +28,8 @@ def main() -> int:
         subprocess.check_call((
             os.path.join(HERE, 'gbp'), '--volume', f'{td}:{td}:ro',
             'import-dsc', os.path.join(td, dsc),
+            '--create-missing-branches',
+            '--upstream-branch', 'upstream',
             '--pristine-tar', '--debian-branch', args.branch_name,
         ))
 
