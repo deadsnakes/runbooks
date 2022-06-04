@@ -39,8 +39,9 @@ def main() -> int:
     _quiet('git', 'merge', '--no-edit', 'upstream')
     _quiet('gbp', 'pq', 'rebase')
     _quiet('gbp', 'pq', 'export')
-    _quiet('git', 'add', 'debian/patches')
-    _quiet('git', 'commit', '-m', 'Refresh patches.')
+    if subprocess.call(('git', 'diff', '--quiet')):
+        _quiet('git', 'add', 'debian/patches')
+        _quiet('git', 'commit', '-m', 'Refresh patches.')
     return 0
 
 
