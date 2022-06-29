@@ -14,6 +14,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 def main() -> NoReturn:
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
+    parser.add_argument('--new-gpg', action='store_true')
     parser.add_argument('--git-build', action='store_true')
     args = parser.parse_args()
 
@@ -36,6 +37,13 @@ def main() -> NoReturn:
     os.makedirs('../dist', exist_ok=True)
     pwd = os.getcwd()
     home = os.environ['HOME']
+
+    # https://www.gnupg.org/faq/whats-new-in-2.1.html
+    if args.new_gpg:
+        gpg_public, gpg_private = ('pubring.kbx', 'private-keys-v1.d')
+    else:
+        gpg_public, gpg_private = ('pubring.gpg', 'secring.gpg')
+
     gbp_args = '' if args.source else '-us -uc'
     gbp_args += (
         '' if not args.git_build else
@@ -58,8 +66,8 @@ def main() -> NoReturn:
         'docker', 'run', '--rm', interactive,
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
-        '-v', f'{home}/.gnupg/pubring.gpg:/root/.gnupg/pubring.gpg:ro',
-        '-v', f'{home}/.gnupg/secring.gpg:/root/.gnupg/secring.gpg:ro',
+        '-v', f'{home}/.gnupg/{gpg_public}:/root/.gnupg/{gpg_public}:ro',
+        '-v', f'{home}/.gnupg/{gpg_private}:/root/.gnupg/{gpg_private}:ro',
         tag, 'bash', '-euxc', prog,
     )
     os.execvp(cmd[0], cmd)
