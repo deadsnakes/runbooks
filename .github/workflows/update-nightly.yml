@@ -1,0 +1,90 @@
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      dists-json:
+        required: true
+        type: string
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: clone target
+      uses: actions/checkout@v2
+      with:
+        path: target
+        fetch-depth: 0
+        token: ${{ secrets.GH_TOKEN }}
+    - name: clone runbooks
+      uses: actions/checkout@v2
+      with:
+        path: runbooks
+        repository: deadsnakes/runbooks
+    - name: pull upstream cpython
+      run: runbooks/nightly-pull-upstream target ${{ inputs.version }}
+  build:
+    needs: update
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        name: ${{ fromJSON(inputs.dists-json) }}
+    env:
+      DEBEMAIL: 'asottile+deadsnakes@umich.edu'
+      DEBFULLNAME: 'Anthony Sottile (deadsnakes)'
+      GIT_AUTHOR_NAME: 'Anthony Sottile'
+      GIT_AUTHOR_EMAIL: 'asottile+deadsnakes@umich.edu'
+      GIT_COMMITTER_NAME: 'Anthony Sottile'
+      GIT_COMMITTER_EMAIL: 'asottile+deadsnakes@umich.edu'
+    steps:
+    - name: clone target
+      uses: actions/checkout@v2
+      with:
+        path: target
+        fetch-depth: 0
+        token: ${{ secrets.GH_TOKEN }}
+    - name: clone runbooks
+      uses: actions/checkout@v2
+      with:
+        path: runbooks
+        repository: deadsnakes/runbooks
+    - uses: actions/setup-python@v2
+    - name: install gbp
+      run: pip install gbp==0.9.24
+    - name: install devscripts
+      run: sudo apt-get update -qq && sudo apt-get install -y devscripts
+    - name: import gpg key
+      run: |
+        install --directory ~/.gnupg --mode 700
+        base64 -d <<< '${{ secrets.GPG_PUBLIC }}' > ~/.gnupg/pubring.gpg
+        base64 -d <<< '${{ secrets.GPG_SECRET }}' > ~/.gnupg/secring.gpg
+        chmod 600 ~/.gnupg/*
+    - name: update branch
+      id: update
+      run: |
+        set -euxo pipefail
+        ret=0; runbooks/nightly-update-branch target ubuntu/${{ matrix.name }} || ret=$?
+        if [ "$ret" -eq 42 ]; then
+          echo '::set-output name=deploy::false'
+        elif [ "$ret" -ne 0 ]; then
+          exit 1
+        else
+          echo '::set-output name=deploy::true'
+        fi
+    - name: build
+      run: mkdir dist && cd target && ../runbooks/build --git-build
+      if: ${{ steps.update.outputs.deploy == 'true' }}
+    - name: test
+      run: runbooks/quick-test --distrib-codename ${{ matrix.name }} --dist-dir dist --src-dir target
+      if: ${{ steps.update.outputs.deploy == 'true' }}
+    - name: build source package
+      run: rm -rf dist && cd target && ../runbooks/build --source --git-build
+      if: ${{ steps.update.outputs.deploy == 'true' }}
+    - name: upload package
+      run: cd dist && dput -d -u ppa:deadsnakes/nightly *.changes
+      if: ${{ steps.update.outputs.deploy == 'true' }}
+    - name: push branches
+      run: git -C target push origin ubuntu/${{ matrix.name }}
+      if: ${{ steps.update.outputs.deploy == 'true' }}
