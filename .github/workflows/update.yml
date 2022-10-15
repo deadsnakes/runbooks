@@ -17,13 +17,13 @@ jobs:
         git config --global user.name 'Anthony Sottile'
         git config --global user.email asottile+deadsnakes@umich.edu
     - name: clone target
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: target
         fetch-depth: 0
         token: ${{ secrets.GH_TOKEN }}
     - name: clone runbooks
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: runbooks
         repository: deadsnakes/runbooks
@@ -43,17 +43,19 @@ jobs:
         git config --global user.name 'Anthony Sottile'
         git config --global user.email asottile+deadsnakes@umich.edu
     - name: clone target
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: target
         fetch-depth: 0
         token: ${{ secrets.GH_TOKEN }}
     - name: clone runbooks
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: runbooks
         repository: deadsnakes/runbooks
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
     - name: install gbp
       run: pip install gbp==0.9.24
     - name: install devscripts
