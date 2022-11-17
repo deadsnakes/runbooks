@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: bin/build
-    - run: bin/push
+    - run: bin/docker-build
+    - run: bin/docker-push
       env:
         GHCR_USER: ${{ github.actor }}
         GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
