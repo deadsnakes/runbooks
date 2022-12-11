@@ -69,11 +69,11 @@ jobs:
         set -euxo pipefail
         ret=0; runbooks/nightly-update-branch target ubuntu/${{ matrix.name }} || ret=$?
         if [ "$ret" -eq 42 ]; then
-          echo '::set-output name=deploy::false'
+          echo "deploy=false" >> "$GITHUB_OUTPUT"
         elif [ "$ret" -ne 0 ]; then
           exit 1
         else
-          echo '::set-output name=deploy::true'
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
         fi
     - name: build
       run: mkdir dist && cd target && ../runbooks/build --git-build
