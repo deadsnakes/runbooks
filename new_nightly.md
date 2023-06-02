@@ -8,6 +8,7 @@
 1. create the `upstream` branch:
     - `git remote add cpython git@github.com:python/cpython`
     - `git fetch cpython refs/heads/main:refs/heads/upstream`
+    - `git checkout upstream`
 1. create the `v3.XX.0a0` tag
 1. create each branch:
     - `git checkout upstream -b ubuntu/jammy`
@@ -16,7 +17,7 @@
     - `git commit -m 'import debian from previous version'`
     - (replace out the version with the new version)
     - refresh patches
-    - bump the version (to change the package name)
+    - bump the version (`3.xx.0~a0-1+jammy` to change the package name)
 1. delete non-alpha0 tags
     - `git tag -l | grep -v a0 | xargs git tag -d`
 1. push all the things!
