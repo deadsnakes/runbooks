@@ -16,7 +16,7 @@ def main() -> NoReturn:
     parser.add_argument('-v', '--volume', dest='volumes', action='append')
     args, rest = parser.parse_known_args()
 
-    # TODO: pristine-tar on bionic is too new for xenial
+    # we use the oldest supported distribution for pristine-tar
     subprocess.check_call((os.path.join(HERE, 'pull-image'), IMG))
 
     gitconfig = os.path.expanduser('~/.gitconfig')
