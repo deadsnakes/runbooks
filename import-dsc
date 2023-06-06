@@ -15,7 +15,7 @@ def _quiet(*cmd: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--branch-name', default='ubuntu/bionic')
+    parser.add_argument('--branch-name', default='ubuntu/jammy')
     parser.add_argument('dsc')
     args = parser.parse_args()
 

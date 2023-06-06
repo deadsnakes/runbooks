@@ -5,7 +5,7 @@
 1. `../runbooks/import-dsc $url.dsc`
 1. Push branches to origin:
    ```bash
-    git push origin ubuntu/bionic pristine-tar upstream --tags
+    git push origin ubuntu/jammy pristine-tar upstream --tags
     ```
 1. Apply similar patches (if needed) as other packages.  [python3.6][python3.6]
    is usually a good place to look.
