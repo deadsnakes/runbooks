@@ -1,9 +1,9 @@
 on:
   pull_request:
-    paths: [dockerfiles/*, .github/workflows/main.yml]
+    paths: [dockerfiles/*, .github/workflows/main.yml, bin/docker-build]
   push:
     branches: [main]
-    paths: [dockerfiles/*, .github/workflows/main.yml]
+    paths: [dockerfiles/*, .github/workflows/main.yml, bin/docker-build]
 
 jobs:
   main:
