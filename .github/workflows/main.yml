@@ -1,3 +1,5 @@
+name: main
+
 on:
   pull_request:
     paths: [dockerfiles/*, .github/workflows/main.yml, bin/docker-build]
