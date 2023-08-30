@@ -1,18 +1,18 @@
 on:
   pull_request:
-    paths: [dockerfiles/*]
+    paths: [dockerfiles/*, .github/workflows/main.yml]
   push:
     branches: [main]
-    paths: [dockerfiles/*]
+    paths: [dockerfiles/*, .github/workflows/main.yml]
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: bin/docker-build
-    - run: bin/docker-push
+    - run: docker login --user '${{ github.actor }}' --password-stdin ghcr.io <<< "$GHCR_TOKEN"
       env:
-        GHCR_USER: ${{ github.actor }}
         GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: github.event_name != 'pull_request'
+    - run: docker buildx create --driver docker-container --use
+    - run: python3 -uS bin/docker-build --event ${{ github.event_name }}
