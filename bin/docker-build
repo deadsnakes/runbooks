@@ -14,11 +14,10 @@ def main() -> int:
     for filename in os.listdir('dockerfiles'):
         _, name = filename.split('.')
         tag = f'ghcr.io/deadsnakes/{name}:latest'
-        tag_cache = f'{tag}-cache'
         print(f' {tag} '.center(79, '='), flush=True)
 
         if args.event == 'push':
-            extra: tuple[str, ...] = ('--cache-to', tag_cache, '--push')
+            extra: tuple[str, ...] = ('--push',)
         else:
             extra = ()
 
@@ -26,7 +25,8 @@ def main() -> int:
             cmd = (
                 'docker', 'buildx', 'build',
                 '--pull',
-                '--cache-from', tag_cache,
+                '--cache-from', tag,
+                '--cache-to', 'type=inline',
                 '--tag', tag,
                 *extra,
                 '-',
