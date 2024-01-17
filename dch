@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import os.path
+import subprocess
+import sys
+from typing import NoReturn
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+IMG = 'ghcr.io/deadsnakes/gbp'
+
+
+def main() -> NoReturn:
+    parser = argparse.ArgumentParser()
+    args, rest = parser.parse_known_args()
+
+    # we use the oldest supported distribution for pristine-tar
+    subprocess.check_call((os.path.join(HERE, 'pull-image'), IMG))
+
+    gitconfig = os.path.expanduser('~/.gitconfig')
+    interactive = '-ti' if sys.stdin.isatty() else '-i'
+    cmd = (
+        'docker', 'run', '--rm', interactive,
+        '--volume', f'{os.getcwd()}:/tmp/src:rw',
+        IMG, 'dch', *rest,
+    )
+    os.execvp(cmd[0], cmd)
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

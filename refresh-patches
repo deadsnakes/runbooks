@@ -5,6 +5,8 @@ import argparse
 import os
 import subprocess
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+
 
 def _release_message(version: str) -> str:
     version, _, prerelease = version.partition('~')
@@ -63,7 +65,8 @@ def main() -> int:
     )).decode().strip()
     debian_version = f'{version}-1+{dist}1'
     _quiet(
-        'dch', '--newversion', debian_version, '--distribution', dist,
+        os.path.join(HERE, 'dch'),
+        '--newversion', debian_version, '--distribution', dist,
         _release_message(version),
     )
     _quiet('git', 'commit', '-am', f'Finish changelog for {debian_version}')
