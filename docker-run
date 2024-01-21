@@ -12,6 +12,24 @@ def _git_cfg(s: str) -> str:
     return subprocess.check_output(cmd).decode().strip()
 
 
+def _gpg_volumes() -> list[str]:
+    def _gpg(f: str, *, home: str = os.path.expanduser('~')) -> str:
+        return os.path.join(home, '.gnupg', f)
+
+    for paths in (
+        ('pubring.kbx', 'private-keys-v1.d'),  # new format
+        # TODO: deadsnakes GHA still uses this
+        ('pubring.gpg', 'secring.gpg'),  # old format
+    ):
+        if all(os.path.exists(_gpg(p)) for p in paths):
+            return [
+                f'--volume={_gpg(p)}:{_gpg(p, home="/root")}:ro'
+                for p in paths
+            ]
+    else:
+        raise AssertionError('no gpg keys found?')
+
+
 def main() -> NoReturn:
     name = _git_cfg('user.name')
     email = _git_cfg('user.email')
@@ -25,6 +43,7 @@ def main() -> NoReturn:
         '--env', f'GIT_COMMITTER_EMAIL={email}',
         '--env', f'DEBFULLNAME={name}',
         '--env', f'DEBEMAIL={email}',
+        *_gpg_volumes(),
         *sys.argv[1:],
     )
     os.execvp(cmd[0], cmd)

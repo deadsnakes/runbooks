@@ -29,7 +29,6 @@ def main() -> NoReturn:
     print('*' * 79)
     os.makedirs('../dist', exist_ok=True)
     pwd = os.getcwd()
-    home = os.environ['HOME']
     gbp_args = '' if args.source else '-us -uc'
     gbp_args += (
         '' if not args.git_build else
@@ -50,8 +49,6 @@ def main() -> NoReturn:
         DOCKER_RUN,
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
-        '-v', f'{home}/.gnupg/pubring.gpg:/root/.gnupg/pubring.gpg:ro',
-        '-v', f'{home}/.gnupg/secring.gpg:/root/.gnupg/secring.gpg:ro',
         f'ghcr.io/deadsnakes/{dist}', 'bash', '-euxc', prog,
     )
     os.execvp(cmd[0], cmd)
