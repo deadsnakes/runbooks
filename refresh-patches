@@ -65,7 +65,10 @@ def main() -> int:
     )).decode().strip()
     debian_version = f'{version}-1+{dist}1'
     _quiet(
-        TOOLS, 'dch', '--newversion', debian_version, '--distribution', dist,
+        TOOLS, 'dch',
+        '--newversion', debian_version,
+        '--distribution', dist,
+        '--force-distribution',
         _release_message(version),
     )
     _quiet('git', 'commit', '-am', f'Finish changelog for {debian_version}')
