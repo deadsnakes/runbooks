@@ -8,7 +8,6 @@ import sys
 from typing import NoReturn
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-IMG = 'ghcr.io/deadsnakes/tools'
 
 
 def _git_cfg(s: str) -> str:
@@ -29,8 +28,6 @@ def main() -> NoReturn:
     name = _git_cfg('user.name')
     email = _git_cfg('user.email')
 
-    subprocess.check_call((os.path.join(HERE, 'pull-image'), IMG))
-
     interactive = '-ti' if sys.stdin.isatty() else '-i'
     cmd = (
         'docker', 'run', '--rm', interactive,
@@ -42,7 +39,7 @@ def main() -> NoReturn:
         '--env', f'DEBFULLNAME={name}',
         '--env', f'DEBEMAIL={email}',
         *(f'--volume={volume}' for volume in args.volumes),
-        IMG, *rest,
+        'ghcr.io/deadsnakes/tools', *rest,
     )
     os.execvp(cmd[0], cmd)
 

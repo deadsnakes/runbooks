@@ -24,12 +24,6 @@ def main() -> NoReturn:
         'dpkg-parsechangelog', '--show-field=distribution',
     )).decode().strip()
 
-    tag = f'ghcr.io/deadsnakes/{dist}'
-    print('*' * 79)
-    print(f'Pulling image (tag: {tag})')
-    print('*' * 79)
-    subprocess.check_call((os.path.join(HERE, 'pull-image'), tag))
-
     print('*' * 79)
     print('Running build (results will be in ../dist)')
     print('*' * 79)
@@ -60,7 +54,7 @@ def main() -> NoReturn:
         '-v', f'{pwd}/../dist:/dist:rw',
         '-v', f'{home}/.gnupg/pubring.gpg:/root/.gnupg/pubring.gpg:ro',
         '-v', f'{home}/.gnupg/secring.gpg:/root/.gnupg/secring.gpg:ro',
-        tag, 'bash', '-euxc', prog,
+        f'ghcr.io/deadsnakes/{dist}', 'bash', '-euxc', prog,
     )
     os.execvp(cmd[0], cmd)
 
