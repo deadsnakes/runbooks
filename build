@@ -4,11 +4,11 @@ from __future__ import annotations
 import argparse
 import os.path
 import subprocess
-import sys
 from typing import NoReturn
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
+TOOLS = os.path.join(HERE, 'tools')
+DOCKER_RUN = os.path.join(HERE, 'docker-run')
 
 
 def main() -> NoReturn:
@@ -21,7 +21,7 @@ def main() -> NoReturn:
     print('Parsing target distribution')
     print('*' * 79)
     dist = subprocess.check_output((
-        'dpkg-parsechangelog', '--show-field=distribution',
+        TOOLS, 'dpkg-parsechangelog', '--show-field=distribution',
     )).decode().strip()
 
     print('*' * 79)
@@ -42,14 +42,12 @@ def main() -> NoReturn:
         f'mk-build-deps --install --remove --tool "apt-get --yes" /code/debian/control && '  # noqa: E501
         f'cp -r /code /tmp && '
         f'cd /tmp/code && '
-        f'git config --global user.name "Anthony Sottile" && '
-        f'git config --global user.email "asottile@umich.edu" && '
+        f'git clean -fxfd && '
         f'gbp buildpackage {gbp_args} --git-pristine-tar --git-debian-branch=ubuntu/{dist} {extra} && '  # noqa
         f'find .. -maxdepth 1 -type f | xargs --replace cp {{}} /dist'
     )
-    interactive = '-ti' if sys.stdin.isatty() else '-i'
     cmd = (
-        'docker', 'run', '--rm', interactive,
+        DOCKER_RUN,
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
         '-v', f'{home}/.gnupg/pubring.gpg:/root/.gnupg/pubring.gpg:ro',
