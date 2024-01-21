@@ -8,25 +8,41 @@ import sys
 from typing import NoReturn
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-IMG = 'ghcr.io/deadsnakes/gbp'
+IMG = 'ghcr.io/deadsnakes/tools'
+
+
+def _git_cfg(s: str) -> str:
+    cmd = ('git', 'config', s)
+    return subprocess.check_output(cmd).decode().strip()
 
 
 def main() -> NoReturn:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--volume', dest='volumes', action='append')
+    parser.add_argument(
+        '-v', '--volume',
+        dest='volumes',
+        action='append',
+        default=[],
+    )
     args, rest = parser.parse_known_args()
 
-    # we use the oldest supported distribution for pristine-tar
+    name = _git_cfg('user.name')
+    email = _git_cfg('user.email')
+
     subprocess.check_call((os.path.join(HERE, 'pull-image'), IMG))
 
-    gitconfig = os.path.expanduser('~/.gitconfig')
     interactive = '-ti' if sys.stdin.isatty() else '-i'
     cmd = (
         'docker', 'run', '--rm', interactive,
-        '--volume', f'{gitconfig}:/homedir/.gitconfig:ro',
         '--volume', f'{os.getcwd()}:/tmp/src:rw',
+        '--env', f'GIT_AUTHOR_NAME={name}',
+        '--env', f'GIT_AUTHOR_EMAIL={email}',
+        '--env', f'GIT_COMMITTER_NAME={name}',
+        '--env', f'GIT_COMMITTER_EMAIL={email}',
+        '--env', f'DEBFULLNAME={name}',
+        '--env', f'DEBEMAIL={email}',
         *(f'--volume={volume}' for volume in args.volumes),
-        IMG, 'gbp', *rest,
+        IMG, *rest,
     )
     os.execvp(cmd[0], cmd)
 

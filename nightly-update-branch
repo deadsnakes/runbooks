@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import os
+import os.path
 import re
 import subprocess
 
+TOOLS = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tools')
 VERSION_RE = re.compile(r'^v(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?(.*)$')
 
 
@@ -47,16 +48,16 @@ def main() -> int:
         deadsnakes_tag = f'deadsnakes/v{v_match[1]}{v_match[3]}'
 
     subprocess.check_call(('git', 'tag', deadsnakes_tag, 'origin/upstream'))
-    subprocess.check_call(('gbp', 'pq', 'import'))
+    subprocess.check_call((TOOLS, 'gbp', 'pq', 'import'))
     subprocess.check_call(('git', 'checkout', args.branch))
     subprocess.check_call(('git', 'merge', 'origin/upstream', '--no-edit'))
-    subprocess.check_call(('gbp', 'pq', 'rebase'))
-    subprocess.check_call(('gbp', 'pq', 'export'))
+    subprocess.check_call((TOOLS, 'gbp', 'pq', 'rebase'))
+    subprocess.check_call((TOOLS, 'gbp', 'pq', 'export'))
     subprocess.check_call(('git', 'add', 'debian/patches'))
     if subprocess.call(('git', 'diff', '--staged', '--quiet')):
         subprocess.check_call(('git', 'commit', '-m', 'Refresh patches'))
     subprocess.check_call((
-        'dch', '--newversion', debian_version, '--distribution', dist,
+        TOOLS, 'dch', '--newversion', debian_version, '--distribution', dist,
         f'Update to {current_tag} ({datetime.date.today()}).',
     ))
     subprocess.check_call((

@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import argparse
-import os
+import os.path
 import subprocess
+
+TOOLS = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tools')
 
 
 def _release_message(version: str) -> str:
@@ -34,10 +36,10 @@ def main() -> int:
     _quiet('git', 'checkout', '-q', 'upstream')
 
     _quiet('git', 'checkout', '-q', args.branch_name)
-    _quiet('gbp', 'pq', 'import')
+    _quiet(TOOLS, 'gbp', 'pq', 'import')
     _quiet('git', 'checkout', '-q', args.branch_name)
     _quiet('git', 'merge', '--no-edit', 'upstream')
-    if subprocess.call(('gbp', 'pq', 'rebase')):
+    if subprocess.call((TOOLS, 'gbp', 'pq', 'rebase')):
         print('*' * 79)
         print('Did not rebase cleanly!')
         print('- to cancel: `git rebase --abort` and `exit 1`')
@@ -46,7 +48,7 @@ def main() -> int:
         ret = subprocess.call(os.environ.get('SHELL', 'bash'))
         if ret:
             return ret
-    _quiet('gbp', 'pq', 'export')
+    _quiet(TOOLS, 'gbp', 'pq', 'export')
     _quiet('git', 'add', 'debian/patches')
     if subprocess.call(('git', 'diff', '--staged', '--quiet')):
         _quiet('git', 'commit', '-m', 'Refresh patches.')
@@ -54,16 +56,16 @@ def main() -> int:
 
     cmd = ('git', 'log', '-1', '--format=%s', 'upstream')
     version = subprocess.check_output(cmd).decode().split()[-1]
-    _quiet('sed', '-i', f's/^SVER=.*$/SVER={version}/g', 'debian/rules')
+    _quiet(TOOLS, 'sed', '-i', f's/^SVER=.*$/SVER={version}/g', 'debian/rules')
     _quiet('git', 'commit', '-am', f'Update SVER to {version}')
     print(f'- SVER updated to {version}')
 
     dist = subprocess.check_output((
-        'dpkg-parsechangelog', '--show-field=distribution',
+        TOOLS, 'dpkg-parsechangelog', '--show-field=distribution',
     )).decode().strip()
     debian_version = f'{version}-1+{dist}1'
     _quiet(
-        'dch', '--newversion', debian_version, '--distribution', dist,
+        TOOLS, 'dch', '--newversion', debian_version, '--distribution', dist,
         _release_message(version),
     )
     _quiet('git', 'commit', '-am', f'Finish changelog for {debian_version}')

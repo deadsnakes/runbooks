@@ -1,3 +1,4 @@
+# we use the oldest supported distribution for pristine-tar
 FROM ubuntu:focal
 RUN : \
     && apt-get update -qq \

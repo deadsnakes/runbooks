@@ -6,7 +6,7 @@ import os.path
 import subprocess
 import tempfile
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+TOOLS = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tools')
 
 
 def _quiet(*cmd: str) -> None:
@@ -26,19 +26,19 @@ def main() -> int:
         dsc, = (f for f in os.listdir(td) if f.endswith('.dsc'))
 
         subprocess.check_call((
-            os.path.join(HERE, 'gbp'), '--volume', f'{td}:{td}:ro',
-            'import-dsc', os.path.join(td, dsc),
+            TOOLS, '--volume', f'{td}:{td}:ro',
+            'gbp', 'import-dsc', os.path.join(td, dsc),
             '--create-missing-branches',
             '--upstream-branch', 'upstream',
             '--pristine-tar', '--debian-branch', args.branch_name,
         ))
 
     _quiet('git', 'checkout', '-q', args.branch_name)
-    _quiet('gbp', 'pq', 'import')
+    _quiet(TOOLS, 'gbp', 'pq', 'import')
     _quiet('git', 'checkout', '-q', args.branch_name)
     _quiet('git', 'merge', '--no-edit', 'upstream')
-    _quiet('gbp', 'pq', 'rebase')
-    _quiet('gbp', 'pq', 'export')
+    _quiet(TOOLS, 'gbp', 'pq', 'rebase')
+    _quiet(TOOLS, 'gbp', 'pq', 'export')
     if subprocess.call(('git', 'diff', '--quiet')):
         _quiet('git', 'add', 'debian/patches')
         _quiet('git', 'commit', '-m', 'Refresh patches.')

@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from typing import NamedTuple
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+TOOLS = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tools')
 VERSION_RE = re.compile(r'^(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?$')
 
 
@@ -78,9 +78,9 @@ def main() -> int:
         ))
 
         subprocess.check_call((
-            os.path.join(HERE, 'gbp'),
+            TOOLS,
             '--volume', f'{dest}:{dest}:ro',
-            'import-orig', dest, '--pristine-tar', '--no-interactive',
+            'gbp', 'import-orig', dest, '--pristine-tar', '--no-interactive',
             '--no-symlink-orig', '--no-merge',
         ))
 
