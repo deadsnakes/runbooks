@@ -7,6 +7,7 @@ RUN : \
         devscripts \
         git-buildpackage \
         gnupg \
+        libdistro-info-perl \
         pristine-tar \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
