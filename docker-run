@@ -6,11 +6,9 @@ import subprocess
 import sys
 from typing import NoReturn
 
-HOME = '/tmp/home'
-
 
 def _user() -> list[str]:
-    ret = ['--user', f'{os.getuid()}:{os.getgid()}', '--env', f'HOME={HOME}']
+    ret = ['--user', f'{os.getuid()}:{os.getgid()}']
     if b'podman' in subprocess.check_output(('docker', 'version')).lower():
         ret.append('--userns=keep-id')
     return ret
@@ -41,7 +39,7 @@ def _gpg_volumes() -> list[str]:
     ):
         if all(os.path.exists(_gpg(p)) for p in paths):
             return [
-                f'--volume={_gpg(p)}:{_gpg(p, home=HOME)}:ro'
+                f'--volume={_gpg(p)}:{_gpg(p, home="/root")}:ro'
                 for p in paths
             ]
     else:
