@@ -11,6 +11,24 @@ TOOLS = os.path.join(HERE, 'tools')
 DOCKER_RUN = os.path.join(HERE, 'docker-run')
 
 
+def _gpg_volumes() -> list[str]:
+    def _gpg(f: str, *, home: str = os.path.expanduser('~')) -> str:
+        return os.path.join(home, '.gnupg', f)
+
+    for paths in (
+        ('pubring.kbx', 'private-keys-v1.d'),  # new format
+        # TODO: deadsnakes GHA still uses this
+        ('pubring.gpg', 'secring.gpg'),  # old format
+    ):
+        if all(os.path.exists(_gpg(p)) for p in paths):
+            return [
+                f'--volume={_gpg(p)}:{_gpg(p, home="/root")}:ro'
+                for p in paths
+            ]
+    else:
+        raise AssertionError('no gpg keys found?')
+
+
 def main() -> NoReturn:
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
@@ -48,6 +66,7 @@ def main() -> NoReturn:
     )
     cmd = (
         DOCKER_RUN,
+        *_gpg_volumes(),
         '-v', f'{pwd}:/code:ro',
         '-v', f'{pwd}/../dist:/dist:rw',
         f'ghcr.io/deadsnakes/{dist}', 'bash', '-euxc', prog,
