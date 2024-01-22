@@ -37,6 +37,7 @@ def main() -> NoReturn:
     )
     extra = '--git-builder="debuild -S"' if args.source else ''
     prog = (
+        f'chmod 700 ~/.gnupg && '
         f'apt-get update -qq && '
         f'mk-build-deps --install --remove --tool "apt-get --yes" /code/debian/control && '  # noqa: E501
         f'cp -r /code /tmp && '
