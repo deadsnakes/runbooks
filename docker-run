@@ -7,9 +7,25 @@ import sys
 from typing import NoReturn
 
 
-def _git_cfg(s: str) -> str:
-    cmd = ('git', 'config', s)
-    return subprocess.check_output(cmd).decode().strip()
+def _user() -> list[str]:
+    ret = ['--user', f'{os.getuid()}:{os.getgid()}']
+    if b'podman' in subprocess.check_output(('docker', 'version')).lower():
+        ret.append('--userns=keep-id')
+    return ret
+
+
+def _env() -> tuple[str, ...]:
+    cfg = ('git', 'config')
+    name = subprocess.check_output((*cfg, 'user.name')).decode().strip()
+    email = subprocess.check_output((*cfg, 'user.email')).decode().strip()
+    return (
+        '--env', f'GIT_AUTHOR_NAME={name}',
+        '--env', f'GIT_AUTHOR_EMAIL={email}',
+        '--env', f'GIT_COMMITTER_NAME={name}',
+        '--env', f'GIT_COMMITTER_EMAIL={email}',
+        '--env', f'DEBFULLNAME={name}',
+        '--env', f'DEBEMAIL={email}',
+    )
 
 
 def _gpg_volumes() -> list[str]:
@@ -31,19 +47,12 @@ def _gpg_volumes() -> list[str]:
 
 
 def main() -> NoReturn:
-    name = _git_cfg('user.name')
-    email = _git_cfg('user.email')
-    interactive = '-ti' if sys.stdin.isatty() else '-i'
-
     cmd = (
-        'docker', 'run', '--rm', interactive,
-        '--env', f'GIT_AUTHOR_NAME={name}',
-        '--env', f'GIT_AUTHOR_EMAIL={email}',
-        '--env', f'GIT_COMMITTER_NAME={name}',
-        '--env', f'GIT_COMMITTER_EMAIL={email}',
-        '--env', f'DEBFULLNAME={name}',
-        '--env', f'DEBEMAIL={email}',
+        'docker', 'run', '--rm',
+        '-ti' if sys.stdin.isatty() else '-i',
+        *_env(),
         *_gpg_volumes(),
+        *_user(),
         *sys.argv[1:],
     )
     os.execvp(cmd[0], cmd)
