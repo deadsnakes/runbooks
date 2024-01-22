@@ -34,7 +34,7 @@ jobs:
     steps:
     - name: configure git
       run: |
-        git config --global user.name 'Anthony Sottile'
+        git config --global user.name 'Anthony Sottile (deadsnakes)'
         git config --global user.email 'asottile+deadsnakes@umich.edu'
     - name: clone target
       uses: actions/checkout@v3
