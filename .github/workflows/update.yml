@@ -36,10 +36,8 @@ jobs:
       matrix:
         name: ${{ fromJSON(inputs.dists-json) }}
     steps:
-    - name: configure debian and git
+    - name: configure git
       run: |
-        echo 'DEBEMAIL=asottile+deadsnakes@umich.edu' >> $GITHUB_ENV
-        echo 'DEBFULLNAME=Anthony Sottile (deadsnakes)' >> $GITHUB_ENV
         git config --global user.name 'Anthony Sottile'
         git config --global user.email asottile+deadsnakes@umich.edu
     - name: clone target
@@ -53,13 +51,6 @@ jobs:
       with:
         path: runbooks
         repository: deadsnakes/runbooks
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: install gbp
-      run: pip install gbp==0.9.24
-    - name: install devscripts
-      run: sudo apt-get update -qq && sudo apt-get install -y devscripts
     - name: import gpg key
       run: |
         install --directory ~/.gnupg --mode 700

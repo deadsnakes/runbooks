@@ -31,14 +31,11 @@ jobs:
     strategy:
       matrix:
         name: ${{ fromJSON(inputs.dists-json) }}
-    env:
-      DEBEMAIL: 'asottile+deadsnakes@umich.edu'
-      DEBFULLNAME: 'Anthony Sottile (deadsnakes)'
-      GIT_AUTHOR_NAME: 'Anthony Sottile'
-      GIT_AUTHOR_EMAIL: 'asottile+deadsnakes@umich.edu'
-      GIT_COMMITTER_NAME: 'Anthony Sottile'
-      GIT_COMMITTER_EMAIL: 'asottile+deadsnakes@umich.edu'
     steps:
+    - name: configure git
+      run: |
+        git config --global user.name 'Anthony Sottile'
+        git config --global user.email 'asottile+deadsnakes@umich.edu'
     - name: clone target
       uses: actions/checkout@v3
       with:
@@ -50,13 +47,6 @@ jobs:
       with:
         path: runbooks
         repository: deadsnakes/runbooks
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: install gbp
-      run: pip install gbp==0.9.24
-    - name: install devscripts
-      run: sudo apt-get update -qq && sudo apt-get install -y devscripts
     - name: import gpg key
       run: |
         install --directory ~/.gnupg --mode 700
