@@ -75,7 +75,10 @@ jobs:
       run: rm -rf dist && cd target && ../runbooks/build --source --git-build
       if: ${{ steps.update.outputs.deploy == 'true' }}
     - name: upload package
-      run: cd dist && dput -d -u ppa:deadsnakes/nightly *.changes
+      run: |
+        ../runbooks/tools \
+          --volume "$PWD/dist:/dist:ro" \
+          bash -euxc 'cd /dist && dput -u ppa:deadsnakes/nightly *.changes'
       if: ${{ steps.update.outputs.deploy == 'true' }}
     - name: push branches
       run: git -C target push origin ubuntu/${{ matrix.name }}
