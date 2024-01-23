@@ -16,7 +16,7 @@ def main() -> int:
     subprocess.check_call((
         TOOLS, '--volume', f'{os.path.abspath("../dist")}:/dist:ro',
         'bash', '-euxc',
-        'cd /dist && USER=dput dput ppa:deadsnakes/ppa *.changes',
+        'cd /dist && USER=dput dput -U -u ppa:deadsnakes/ppa *.changes',
     ))
 
     cmd = (TOOLS, 'dpkg-parsechangelog', '--show-field=version')
