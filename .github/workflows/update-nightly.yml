@@ -36,6 +36,8 @@ jobs:
       run: |
         git config --global user.name 'Anthony Sottile (deadsnakes)'
         git config --global user.email 'asottile+deadsnakes@umich.edu'
+        echo 'DEBFULLNAME=Anthony Sottile (deadsnakes)' >> $GITHUB_ENV
+        echo 'DEBEMAIL=asottile+deadsnakes@umich.edu' >> $GITHUB_ENV
     - name: clone target
       uses: actions/checkout@v3
       with:
