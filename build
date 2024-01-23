@@ -53,7 +53,7 @@ def main() -> NoReturn:
         ' --git-pristine-tar-commit '
         "--git-upstream-tag='deadsnakes/v%(version%~%_)s'"
     )
-    extra = '--git-builder="debuild -S"' if args.source else ''
+    extra = '--git-builder="debuild -S -sa"' if args.source else ''
     prog = (
         f'chmod 700 ~/.gnupg && '
         f'apt-get update -qq && '
