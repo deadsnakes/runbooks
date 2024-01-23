@@ -78,7 +78,8 @@ jobs:
       run: |
         runbooks/tools \
           --volume "$PWD/dist:/dist:ro" \
-          bash -euxc 'cd /dist && dput -u ppa:deadsnakes/nightly *.changes'
+          bash -euxc \
+          'cd /dist && USER=dput dput -u ppa:deadsnakes/nightly *.changes'
       if: ${{ steps.update.outputs.deploy == 'true' }}
     - name: push branches
       run: git -C target push origin ubuntu/${{ matrix.name }}
