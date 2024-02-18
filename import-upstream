@@ -63,6 +63,18 @@ def main() -> int:
 
     os.chdir(args.repo)
 
+    tag = f'upstream/{args.version.version}'
+    print(f"checking for pre-existing '{tag}' tag", end='... ', flush=True)
+    ret = subprocess.call(
+        ('git', 'rev-parse', '--quiet', '--verify', tag),
+        stdout=subprocess.DEVNULL,
+    )
+    if ret == 0:
+        print('found, exiting.')
+        return 0
+    else:
+        print('not found, continuing.')
+
     print('ensuring branches available...')
     subprocess.check_output(('git', 'checkout', '-q', 'pristine-tar'))
     subprocess.check_output(('git', 'checkout', '-q', 'upstream'))
