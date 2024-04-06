@@ -6,6 +6,7 @@ on:
   push:
     branches: [main]
     paths: [dockerfiles/*, .github/workflows/main.yml, bin/docker-build]
+  workflow_dispatch:
 
 jobs:
   main:
