@@ -22,7 +22,7 @@ inst python{ver}-minimal
 inst python{ver}
 
 python{ver} -c 'import cmath, ssl'
-if [ {ver} != '3.12' -a {ver} != '3.13' ]; then
+if [ {ver} != '3.12' -a {ver} != '3.13' -a {ver} != '3.14' ]; then
     # distutils.__init__ and distutils.version should be in main lib package
     python{ver} -c 'import distutils; assert distutils.__file__'
     python{ver} -c 'import distutils.version'
@@ -35,10 +35,10 @@ if [ \
 ]; then
     apt-get install -y --no-install-recommends python3-distutils
 else
-    if [ {ver} != '3.13' ]; then
+    if [ {ver} != '3.13' -a {ver} != '3.14' ]; then
         inst python{ver}-lib2to3
     fi
-    if [ {ver} != '3.12' -a {ver} != '3.13' ]; then
+    if [ {ver} != '3.12' -a {ver} != '3.13' -a {ver} != '3.14' ]; then
         inst python{ver}-distutils
     fi
 fi
