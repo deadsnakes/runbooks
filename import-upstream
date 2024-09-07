@@ -17,10 +17,6 @@ class Version(NamedTuple):
     extra: str
 
     @property
-    def is_prerelease(self) -> bool:
-        return bool(self.extra)
-
-    @property
     def pkg_name(self) -> str:
         minor = '.'.join(self.version.split('.')[:2])
         return f'python{minor}'

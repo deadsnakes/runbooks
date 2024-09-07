@@ -1,0 +1,404 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import functools
+import os.path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+from typing import NamedTuple
+
+_DIRNAME_PAT = re.compile(r'^py([0-9]+)\.([0-9]+)$')
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+BUILD = os.path.join(HERE, 'build')
+TOOLS = os.path.join(HERE, 'tools')
+
+
+@functools.lru_cache
+def _py_ver() -> tuple[int, int]:
+    dirname = os.path.basename(os.getcwd())
+    match = _DIRNAME_PAT.match(dirname)
+    if not match:
+        raise SystemExit(f'not a meta-gbp repo? expected py#.# dir: {dirname}')
+    return int(match[1]), int(match[2])
+
+
+VERSION_RE = re.compile(r'^v(\d+\.\d+\.\d+)((?:a|b|rc)\d+)?(.*)$')
+
+
+class Version(NamedTuple):
+    version: str
+    extra: str
+
+    @property
+    def pkg_name(self) -> str:
+        minor = '.'.join(self.version.split('.')[:2])
+        return f'python{minor}'
+
+    @property
+    def debian_version(self) -> str:
+        extra = f'~{self.extra}' if self.extra else ''
+        return f'{self.version}{extra}'
+
+    @property
+    def filename(self) -> str:
+        return f'{self.pkg_name}_{self.debian_version}.tgz'
+
+    @property
+    def download_url(self) -> str:
+        extra = self.extra or ''
+        return (
+            f'https://www.python.org/ftp/python/{self.version}/'
+            f'Python-{self.version}{extra}.tgz'
+        )
+
+    @classmethod
+    def parse(cls, s: str) -> Version:
+        match = VERSION_RE.fullmatch(s)
+        if not match or _is_nightly(match):
+            raise ValueError(f'expected bare version, got {s}')
+        return cls(match[1], match[2])
+
+
+def _current_tag() -> re.Match[str]:
+    tag = _cmd_o('git', '-C', 'cpython', 'describe', '--tags').rstrip()
+    match = VERSION_RE.fullmatch(tag)
+    if match is None:
+        raise SystemExit(f'Unexpected tag: {tag}')
+    return match
+
+
+def _is_prerelease(v_match: re.Match[str]) -> bool:
+    return bool(v_match[2])
+
+
+def _is_nightly(v_match: re.Match[str]) -> bool:
+    return bool(v_match[3])
+
+
+def _p_cmd(cmd: tuple[str, ...], cwd: str | None) -> None:
+    cwd_s = f'({cwd})' if cwd else ''
+    print(f'{cwd_s}+ {shlex.join(cmd)}', file=sys.stderr)
+
+
+def _cmd_q(*cmd: str, cwd: str | None = None) -> None:
+    _p_cmd(cmd, cwd)
+    ret = subprocess.call(
+        cmd,
+        cwd=cwd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if ret:
+        raise SystemExit(f'`{shlex.join(cmd)}` raised {ret}')
+
+
+def _cmd_o(*cmd: str, cwd: str | None = None) -> str:
+    _p_cmd(cmd, cwd)
+    ret = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, text=True)
+    if ret.returncode:
+        raise SystemExit(f'`{shlex.join(cmd)}` raised {ret.returncode}')
+    return ret.stdout
+
+
+def _cmd_r(*cmd: str, cwd: str | None = None) -> int:
+    _p_cmd(cmd, cwd)
+    return subprocess.call(cmd, cwd=cwd)
+
+
+def _validate_meta_gbp_dir() -> None:
+    for path in (
+        'changelogs/mainline',
+        'changelogs/nightly',
+        'cpython',
+        'debiandirs',
+        'patches',
+    ):
+        if not os.path.exists(path):
+            raise SystemExit(f'not a meta-gbp repo? missing ./{path}')
+
+    assert _py_ver()
+
+    mainline_dists = sorted(os.listdir('changelogs/mainline'))
+    nightly_dists = sorted(os.listdir('changelogs/nightly'))
+    assert mainline_dists == nightly_dists, (mainline_dists, nightly_dists)
+
+
+def _ensure_submodule_available() -> None:
+    # if the submodule doesn't exist at all
+    if not os.path.isdir('cpython/Python'):
+        _cmd_q('git', 'submodule', 'update', '--init')
+    # if the submodule is at an unknown revision
+    if _cmd_r('git', 'diff', '--quiet', '--no-ext-diff', 'cpython'):
+        _cmd_q('git', 'submodule', 'update', '--init')
+
+
+def _mainline_repo(dist: str) -> int:
+    _cmd_q('rm', '-rf', 'work')
+
+    _cmd_q('git', 'init', 'work')
+
+    version = Version.parse(_current_tag()[0])
+
+    with tempfile.TemporaryDirectory() as td:
+        dest = os.path.join(td, version.filename)
+        _cmd_q(
+            'wget',
+            '--quiet',
+            '--output-document', dest,
+            version.download_url,
+        )
+
+        _cmd_q(
+            TOOLS,
+            '--volume', f'{dest}:{dest}:ro',
+            'gbp', 'import-orig', dest,
+            '--pristine-tar',
+            '--upstream-branch', 'upstream',
+            '--no-interactive',
+            '--no-symlink-orig',
+            '--no-merge',
+            cwd='work',
+        )
+
+    git = ('git', '-C', 'work')
+
+    _cmd_q(*git, 'checkout', 'upstream', '-b', f'ubuntu/{dist}')
+
+    shutil.copytree(f'debiandirs/{dist}', 'work/debian')
+    shutil.copy(f'changelogs/mainline/{dist}', 'work/debian/changelog')
+    shutil.copytree('patches', 'work/debian/patches')
+
+    _cmd_q(*git, 'add', 'debian')
+    _cmd_q(*git, 'commit', '-q', '-m', f'meta-gbp: init for {dist}')
+
+    return 0
+
+
+def _minimal_nightly_repo() -> int:
+    _cmd_q('rm', '-rf', 'work')
+    _cmd_q('git', 'clone', 'cpython', 'work')
+
+    git = ('git', '-C', 'work')
+
+    _cmd_q(*git, 'branch', 'upstream')
+
+    # tag `upstream` with a version we'll use to make the changelog with
+    v_match = _current_tag()
+    if _is_prerelease(v_match):
+        new_tag = f'deadsnakes/v{v_match[1]}_{v_match[2]}{v_match[3]}'
+    else:
+        new_tag = f'deadsnakes/v{v_match[1]}{v_match[3]}'
+    _cmd_q(*git, 'tag', new_tag)
+
+    _cmd_q(*git, 'checkout', '-b', 'ubuntu/unknown')
+
+    # this is the minimal `debian` directory for `gbp pq`
+    os.makedirs('work/debian')
+    open('work/debian/control', 'a+').close()
+    shutil.copytree('patches', 'work/debian/patches')
+
+    _cmd_q(*git, 'add', 'debian')
+    _cmd_q(*git, 'commit', '-q', '-m', 'meta-gbp: init')
+
+    return 0
+
+
+def _nightly_repo(dist: str) -> int:
+    ret = _minimal_nightly_repo()
+    if ret:
+        return ret
+
+    git = ('git', '-C', 'work')
+
+    _cmd_q(*git, 'branch', '-m', f'ubuntu/{dist}')
+
+    # recreate the non-minimal debian directory
+    _cmd_q('rm', '-rf', 'work/debian')
+
+    shutil.copytree(f'debiandirs/{dist}', 'work/debian')
+    shutil.copy(f'changelogs/nightly/{dist}', 'work/debian/changelog')
+    shutil.copytree('patches', 'work/debian/patches')
+
+    _cmd_q(*git, 'add', 'debian')
+    _cmd_q(*git, 'commit', '-q', '-m', f'meta-gbp: init for {dist}')
+
+    return 0
+
+
+def _materialize(dist: str) -> int:
+    if _is_nightly(_current_tag()):
+        return _nightly_repo(dist)
+    else:
+        return _mainline_repo(dist)
+
+
+def _update_target() -> str:
+    git = ('git', '-C', 'cpython')
+
+    major, minor = _py_ver()
+
+    def _fetch_upstream(branch: str) -> None:
+        _cmd_q(
+            # XXX: remote may not be called origin!
+            *git, 'fetch', 'origin',
+            f'refs/heads/{branch}:refs/heads/cpython',
+        )
+
+    try:
+        _fetch_upstream(f'{major}.{minor}')
+    except SystemExit:
+        _fetch_upstream('main')
+
+    current = _cmd_o(*git, 'rev-parse', 'HEAD').strip()
+
+    log_output = _cmd_o(
+        *git, 'log',
+        '--reverse',
+        '--decorate-refs=refs/tags/',
+        '--format=%H',
+        '--simplify-by-decoration',
+        # XXX: HEAD may not be the exact submodule version?
+        'HEAD..cpython',
+    )
+    for line in log_output.splitlines():
+        if line == current:
+            continue
+        else:
+            return line
+    else:
+        return _cmd_o(*git, 'rev-parse', 'cpython').strip()
+
+
+def _update(*, rev: str | None) -> int:
+    if rev is None:
+        rev = _update_target()
+
+    current_rev = _cmd_o('git', '-C', 'cpython', 'rev-parse', 'HEAD').strip()
+    if current_rev == rev:
+        print('already up to date!', file=sys.stderr)
+        return 0
+
+    _minimal_nightly_repo()
+
+    git_work = ('git', '-C', 'work')
+
+    _cmd_q(TOOLS, 'gbp', 'pq', 'import', cwd='work')
+    _cmd_q(*git_work, 'checkout', '-')
+
+    _cmd_q(*git_work, 'merge', rev)
+
+    # TODO: interactive this like `refresh-patches`
+    _cmd_q(TOOLS, 'gbp', 'pq', 'rebase', cwd='work')
+    _cmd_q(TOOLS, 'gbp', 'pq', 'export', cwd='work')
+
+    _cmd_q('rm', '-rf', 'patches')
+    shutil.copytree('work/debian/patches', 'patches')
+    _cmd_q('git', '-C', 'cpython', 'checkout', rev)
+
+    v_match = _current_tag()
+
+    if _is_nightly(v_match):
+        changelog_target = 'nightly'
+    else:
+        changelog_target = 'mainline'
+
+    for dist in os.listdir(f'changelogs/{changelog_target}'):
+        if _is_prerelease(v_match):
+            debian_version = f'{v_match[1]}~{v_match[2]}{v_match[3]}-1+{dist}1'
+        else:
+            debian_version = f'{v_match[1]}{v_match[3]}-1+{dist}1'
+        if subprocess.call((
+            TOOLS, 'dch',
+            '--newversion', debian_version,
+            '--distribution', dist,
+            '--force-distribution',
+            '--changelog', f'changelogs/{changelog_target}/{dist}',
+            f'Update to {v_match[0]}.',
+        )):
+            raise SystemExit('changelog error!')
+
+    _cmd_q('git', 'add', 'changelogs', 'cpython', 'patches')
+    _cmd_q('git', 'commit', '-m', f'update to {rev} ({changelog_target})')
+
+    return 0
+
+
+def _build(*, source: bool) -> int:
+    if not os.path.exists('work/debian/rules'):
+        raise SystemExit('not materialized?')
+
+    _cmd_q('rm', '-rf', 'dist')
+
+    args = []
+    if _is_nightly(_current_tag()):
+        args.append('--git-build')
+    if source:
+        args.append('--source')
+
+    return _cmd_r(BUILD, *args, cwd='work')
+
+
+def _upload() -> int:
+    changes, = (f for f in os.listdir('dist') if f.endswith('.changes'))
+    changes = f'/dist/{changes}'
+
+    if _is_nightly(_current_tag()):
+        cmd: tuple[str, ...]
+        cmd = ('dput', '-U', '-u', 'ppa:deadsnakes/nightly', changes)
+    else:
+        cmd = ('dput', '-U', 'ppa:deadsnakes/ppa', changes)
+
+    return _cmd_r(
+        TOOLS,
+        '--volume', f'{os.path.abspath("dist")}:/dist:ro',
+        'bash', '-euxc',
+        f'cd /dist && USER=dput {shlex.join(cmd)}',
+    )
+
+
+def main() -> int:
+    _validate_meta_gbp_dir()
+
+    dists = sorted(os.listdir('changelogs/mainline'))
+
+    parser = argparse.ArgumentParser()
+
+    subparsers = parser.add_subparsers(dest='command', required=True)
+
+    build = subparsers.add_parser('build')
+    build.add_argument('--source', action='store_true')
+
+    materialize = subparsers.add_parser('materialize')
+    materialize.add_argument('dist', choices=dists)
+
+    update = subparsers.add_parser('update')
+    update.add_argument('--rev')
+
+    subparsers.add_parser('update-target')
+
+    subparsers.add_parser('upload')
+
+    args = parser.parse_args()
+
+    _ensure_submodule_available()
+
+    if args.command == 'build':
+        return _build(source=args.source)
+    elif args.command == 'materialize':
+        return _materialize(args.dist)
+    elif args.command == 'update':
+        return _update(rev=args.rev)
+    elif args.command == 'upload':
+        return _upload()
+    else:
+        raise NotImplementedError(f'{args.command=}')
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
