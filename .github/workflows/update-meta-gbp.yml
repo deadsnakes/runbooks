@@ -31,7 +31,7 @@ jobs:
     - name: push changes
       id: push
       run: |
-        if ! git diff --quiet HEAD origin/HEAD; then
+        if [ "$(git rev-list HEAD --count)" -eq 2 ]; then
             echo 'updated=true' >> "$GITHUB_OUTPUT"
             git push origin HEAD
         fi
