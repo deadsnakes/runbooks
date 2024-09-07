@@ -9,7 +9,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     outputs:
-      updated: ${{ steps.push.outputs.updated }}
+      rev: ${{ steps.push.outputs.rev }}
     steps:
     - name: configure git
       run: |
@@ -32,12 +32,12 @@ jobs:
       id: push
       run: |
         if [ "$(git rev-list HEAD --count)" -eq 2 ]; then
-            echo 'updated=true' >> "$GITHUB_OUTPUT"
             git push origin HEAD
+            echo "rev=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
         fi
   build:
     needs: update
-    if: needs.update.outputs.updated == 'true'
+    if: needs.update.outputs.rev
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -51,6 +51,8 @@ jobs:
         echo 'DEBEMAIL=asottile+deadsnakes@umich.edu' >> $GITHUB_ENV
     - name: clone target
       uses: actions/checkout@v3
+      with:
+        ref: ${{ needs.update.outputs.rev }}
     - name: clone runbooks
       uses: actions/checkout@v3
       with:
