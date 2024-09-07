@@ -9,7 +9,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     outputs:
-      updated: ${{ steps.push.updated }}
+      updated: ${{ steps.push.outputs.updated }}
     steps:
     - name: configure git
       run: |
