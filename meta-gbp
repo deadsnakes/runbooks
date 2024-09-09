@@ -314,18 +314,41 @@ def _update(*, rev: str | None) -> int:
             debian_version = f'{v_match[1]}~{v_match[2]}{v_match[3]}-1+{dist}1'
         else:
             debian_version = f'{v_match[1]}{v_match[3]}-1+{dist}1'
-        if subprocess.call((
+        _cmd_q(
             TOOLS, 'dch',
             '--newversion', debian_version,
             '--distribution', dist,
             '--force-distribution',
             '--changelog', f'changelogs/{changelog_target}/{dist}',
             f'Update to {v_match[0]}.',
-        )):
-            raise SystemExit('changelog error!')
+        )
 
     _cmd_q('git', 'add', 'changelogs', 'cpython', 'patches')
     _cmd_q('git', 'commit', '-m', f'update to {rev} ({changelog_target})')
+
+    return 0
+
+
+def _changelog(message: str) -> int:
+    for dist in os.listdir('changelogs/mainline'):
+        current_version = _cmd_o(
+            TOOLS, 'dpkg-parsechangelog',
+            '--file', f'changelogs/mainline/{dist}',
+            '--show-field=version',
+        ).strip()
+
+        parsed = re.fullmatch(fr'^(.*)-1\+{dist}([0-9]+)$', current_version)
+        if parsed is None:
+            raise SystemExit(f'unexpected version: {current_version}')
+
+        _cmd_q(
+            TOOLS, 'dch',
+            '--newversion', f'{parsed[1]}-1+{dist}{int(parsed[2]) + 1}',
+            '--distribution', dist,
+            '--force-distribution',
+            '--changelog', f'changelogs/mainline/{dist}',
+            message,
+        )
 
     return 0
 
@@ -375,6 +398,9 @@ def main() -> int:
     build = subparsers.add_parser('build')
     build.add_argument('--source', action='store_true')
 
+    changelog = subparsers.add_parser('changelog')
+    changelog.add_argument('-m', '--message', required=True)
+
     materialize = subparsers.add_parser('materialize')
     materialize.add_argument('dist', choices=dists)
 
@@ -391,6 +417,8 @@ def main() -> int:
 
     if args.command == 'build':
         return _build(source=args.source)
+    elif args.command == 'changelog':
+        return _changelog(args.message)
     elif args.command == 'materialize':
         return _materialize(args.dist)
     elif args.command == 'update':
