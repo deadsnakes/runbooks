@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+"""meta-gbp: manages mainline and nightly releases of deadsnakes
+
+normally everything happens automatically!
+
+### adding a change to a mainline version
+
+1. create a branch from the latest mainline change
+
+   ```bash
+   git checkout -b my-feature "$(git log -1 --format=%h changelogs/mainline)"
+   ```
+
+2. make appropriate changes
+3. write a changelog with `../runbooks/meta-gbp changelog -m '...'
+4. make a commit
+5. build and release
+6. merge branch back into `main`
+"""
 from __future__ import annotations
 
 import argparse
