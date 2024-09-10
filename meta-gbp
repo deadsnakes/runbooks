@@ -425,8 +425,6 @@ def main() -> int:
     update = subparsers.add_parser('update')
     update.add_argument('--rev')
 
-    subparsers.add_parser('update-target')
-
     subparsers.add_parser('upload')
 
     args = parser.parse_args()
