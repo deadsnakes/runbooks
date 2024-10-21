@@ -326,7 +326,6 @@ def _update(*, rev: str | None, interactive: bool) -> int:
 
     _cmd_q(*git_work, 'merge', rev)
 
-    # TODO: interactive this like `refresh-patches`
     if _cmd_r(TOOLS, 'gbp', 'pq', 'rebase', cwd='work'):
         if not interactive:
             return 1

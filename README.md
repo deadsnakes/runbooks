@@ -7,17 +7,19 @@ This is mostly for documenting how the development / release of deadsnakes
 packages is done.
 
 
-### building a package
+### building a `py#.##` repo
 
-From the source directory (such as `python3.6`) run the `./build` script
-included in this repository.  For instance:
+first materialize the repo / distribution you want to work on:
 
 ```bash
-../runbooks/build
+../runbooks/meta-gbp materialize noble
 ```
 
-`./build` will pick up on the codename specified in `debian/changes` and
-build debian packages using `docker`.
+then call build
+
+```bash
+../runbooks/meta-gbp build
+```
 
 The output will be in `../dist`.
 
