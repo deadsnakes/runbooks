@@ -27,7 +27,7 @@ jobs:
         path: runbooks
         repository: deadsnakes/runbooks
     - name: pull upstream cpython
-      run: runbooks/meta-gbp update
+      run: runbooks/meta-gbp update --no-interactive
     - name: push changes
       id: push
       run: |
