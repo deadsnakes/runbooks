@@ -308,7 +308,7 @@ def _update_target() -> str:
         return _cmd_o(*git, 'rev-parse', 'cpython').strip()
 
 
-def _update(*, rev: str | None) -> int:
+def _update(*, rev: str | None, interactive: bool) -> int:
     if rev is None:
         rev = _update_target()
 
@@ -327,7 +327,19 @@ def _update(*, rev: str | None) -> int:
     _cmd_q(*git_work, 'merge', rev)
 
     # TODO: interactive this like `refresh-patches`
-    _cmd_q(TOOLS, 'gbp', 'pq', 'rebase', cwd='work')
+    if _cmd_r(TOOLS, 'gbp', 'pq', 'rebase', cwd='work'):
+        if not interactive:
+            return 1
+
+        print('*' * 79)
+        print('Did not rebase cleanly!')
+        print('- to cancel: `git rebase --abort` and `exit 1`')
+        print('- to continue: resolve the rebase conflicts and `exit 0`')
+        print('*' * 79)
+        ret = _cmd_r(os.environ.get('SHELL', 'bash'), cwd='work')
+        if ret:
+            return ret
+
     _cmd_q(TOOLS, 'gbp', 'pq', 'export', cwd='work')
 
     _cmd_q('rm', '-rf', 'patches')
@@ -438,6 +450,11 @@ def main() -> int:
 
     update = subparsers.add_parser('update')
     update.add_argument('--rev')
+    update.add_argument(
+        '--no-interactive',
+        dest='interactive',
+        action='store_false',
+    )
 
     subparsers.add_parser('upload')
 
@@ -452,7 +469,7 @@ def main() -> int:
     elif args.command == 'materialize':
         return _materialize(args.dist)
     elif args.command == 'update':
-        return _update(rev=args.rev)
+        return _update(rev=args.rev, interactive=args.interactive)
     elif args.command == 'upload':
         return _upload()
     else:
