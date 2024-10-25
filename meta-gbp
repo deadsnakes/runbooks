@@ -162,10 +162,41 @@ def _validate_meta_gbp_dir() -> None:
     assert mainline_dists == nightly_dists, (mainline_dists, nightly_dists)
 
 
+def _likely_cpython_clone(d: str) -> bool:
+    return os.path.isdir(d) and os.path.exists(os.path.join(d, 'Python'))
+
+
+def _potential_cpython_clone() -> str | None:
+    # + cpython/  <== this one
+    # + deadsnakes/
+    # +  + runbooks/
+    # +  + py3.14/
+    # +  +  + cpython/  <== or this one
+    if _likely_cpython_clone('../../cpython'):
+        return '../../cpython'
+
+    # first check: ../py*/cpython
+    for dname in os.listdir('..'):
+        if dname.startswith('py'):
+            dname = os.path.abspath(os.path.join('..', dname))
+            if _likely_cpython_clone(dname):
+                return dname
+
+    return None
+
+
+def _reference_args() -> tuple[str, ...]:
+    cpython_dir = _potential_cpython_clone()
+    if cpython_dir is not None:
+        return ('--reference', cpython_dir, '--dissociate')
+    else:
+        return ()
+
+
 def _ensure_submodule_available() -> None:
     # if the submodule doesn't exist at all
     if not os.path.isdir('cpython/Python'):
-        _cmd_q('git', 'submodule', 'update', '--init')
+        _cmd_q('git', 'submodule', 'update', '--init', *_reference_args())
     # if the submodule is at an unknown revision
     if _cmd_r('git', 'diff', '--quiet', '--no-ext-diff', 'cpython'):
         _cmd_q('git', 'submodule', 'update', '--init')
