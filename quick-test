@@ -15,14 +15,18 @@ inst() {{
 . /etc/lsb-release
 
 apt-get update -qq
-inst libpython{ver}-minimal
+if {lt312}; then
+    inst libpython{ver}-minimal
+fi
 inst libpython{ver}-stdlib
 inst libpython{ver}
-inst python{ver}-minimal
+if {lt312}; then
+    inst python{ver}-minimal
+fi
 inst python{ver}
 
 python{ver} -c 'import cmath, ssl'
-if [ {ver} != '3.12' -a {ver} != '3.13' -a {ver} != '3.14' ]; then
+if {lt312}; then
     # distutils.__init__ and distutils.version should be in main lib package
     python{ver} -c 'import distutils; assert distutils.__file__'
     python{ver} -c 'import distutils.version'
@@ -35,10 +39,10 @@ if [ \
 ]; then
     apt-get install -y --no-install-recommends python3-distutils
 else
-    if [ {ver} != '3.13' -a {ver} != '3.14' ]; then
+    if {lt313}; then
         inst python{ver}-lib2to3
     fi
-    if [ {ver} != '3.12' -a {ver} != '3.13' -a {ver} != '3.14' ]; then
+    if {lt312}; then
         inst python{ver}-distutils
     fi
 fi
@@ -71,6 +75,10 @@ test -x venv/bin/astpretty
 '''
 
 
+def bool_prog(b: bool) -> str:
+    return str(b).lower()
+
+
 def main() -> NoReturn:
     parser = argparse.ArgumentParser()
     parser.add_argument('--distrib-codename', default='jammy')
@@ -86,11 +94,19 @@ def main() -> NoReturn:
         else:
             raise AssertionError('could not find version!')
 
+    major_s, minor_s = version.split('.')
+    major, minor = int(major_s), int(minor_s)
+
     cmd = (
         'docker', 'run', '--rm',
         '-v', f'{os.path.abspath(args.dist_dir)}:/dist:ro',
         f'ubuntu:{args.distrib_codename}',
-        'bash', '-euxc', PROG.format(ver=version),
+        'bash', '-euxc',
+        PROG.format(
+            ver=version,
+            lt312=bool_prog((major, minor) < (3, 12)),
+            lt313=bool_prog((major, minor) < (3, 13)),
+        ),
     )
     os.execvp(cmd[0], cmd)
 
