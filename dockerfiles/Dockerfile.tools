@@ -1,5 +1,5 @@
 # we use the oldest supported distribution for pristine-tar
-FROM ubuntu:focal
+FROM ubuntu:jammy
 RUN : \
     && apt-get update -qq \
     && DEBIAN_FRONTEND=noninteractive apt-get install \

@@ -33,10 +33,7 @@ if {lt312}; then
 fi
 
 apt-get install -y --no-install-recommends ca-certificates
-if [ \
-    "$DISTRIB_CODENAME" = focal -a {ver} = '3.9' -o \
-    "$DISTRIB_CODENAME" = jammy -a {ver} = '3.11' \
-]; then
+if [ "$DISTRIB_CODENAME" = jammy -a {ver} = '3.11' ]; then
     apt-get install -y --no-install-recommends python3-distutils
 else
     if {lt313}; then

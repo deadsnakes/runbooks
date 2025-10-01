@@ -44,7 +44,7 @@ ALWAYS_DEPS = {
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--codename', default='focal')
+    parser.add_argument('--codename', required=True)
     parser.add_argument('control_filename')
     args = parser.parse_args()
 
