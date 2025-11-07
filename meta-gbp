@@ -85,7 +85,8 @@ class Version(NamedTuple):
 
 def _current_tag() -> re.Match[str]:
     git = ('git', '-C', 'cpython')
-    tag = _cmd_o(*git, 'describe', '--abbrev=10', '--tags').rstrip()
+    tag_cmd = (*git, 'describe', '--abbrev=10', '--tags', '--match', 'v*')
+    tag = _cmd_o(*tag_cmd).rstrip()
     match = VERSION_RE.fullmatch(tag)
     if match is None:
         raise SystemExit(f'Unexpected tag: {tag}')
