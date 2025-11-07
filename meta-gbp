@@ -306,18 +306,22 @@ def _update_target() -> str:
     git = ('git', '-C', 'cpython')
 
     major, minor = _py_ver()
+    ver = f'{major}.{minor}'
 
-    def _fetch_upstream(branch: str) -> None:
-        _cmd_q(
-            # XXX: remote may not be called origin!
-            *git, 'fetch', 'origin',
-            f'refs/heads/{branch}:refs/heads/cpython',
-        )
+    fetch = (*git, 'fetch', 'origin')
 
     try:
-        _fetch_upstream(f'{major}.{minor}')
+        # normal
+        _cmd_q(*fetch, f'refs/heads/{ver}:refs/heads/cpython')
     except SystemExit:
-        _fetch_upstream('main')
+        try:
+            # eol
+            _cmd_q(*fetch, f'refs/tags/{ver}:refs/tags/{ver}')
+            _cmd_q(*git, 'update-ref', 'refs/heads/cpython', f'{ver}~0')
+            _cmd_q(*git, 'tag', '--delete', ver)
+        except SystemExit:
+            # nightly
+            _cmd_q(*fetch, 'refs/heads/main:refs/heads/cpython')
 
     current = _cmd_o(*git, 'rev-parse', 'HEAD').strip()
 
