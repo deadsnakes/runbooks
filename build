@@ -33,7 +33,10 @@ def main() -> NoReturn:
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
     parser.add_argument('--git-build', action='store_true')
+    parser.add_argument('--sign', action='store_true')
     args = parser.parse_args()
+
+    sign = args.source or args.sign
 
     print('*' * 79)
     print('Parsing target distribution')
@@ -47,7 +50,7 @@ def main() -> NoReturn:
     print('*' * 79)
     os.makedirs('../dist', exist_ok=True)
     pwd = os.getcwd()
-    gbp_args = '' if args.source else '-us -uc'
+    gbp_args = '' if sign else '-us -uc'
     gbp_args += (
         '' if not args.git_build else
         ' --git-pristine-tar-commit '
