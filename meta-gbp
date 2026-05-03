@@ -408,15 +408,17 @@ def _update(*, rev: str | None, interactive: bool) -> int:
     return 0
 
 
-def _changelog(message: str) -> int:
+def _changelog(message: str, *, only: str | None) -> int:
     for dist in os.listdir('changelogs/mainline'):
+        if only is not None and dist != only:
+            continue
         current_version = _cmd_o(
             TOOLS, 'dpkg-parsechangelog',
             '--file', f'changelogs/mainline/{dist}',
             '--show-field=version',
         ).strip()
 
-        parsed = re.fullmatch(fr'^(.*)-1\+{dist}([0-9]+)$', current_version)
+        parsed = re.fullmatch(r'^(.*)-1\+[a-z]+([0-9]+)$', current_version)
         if parsed is None:
             raise SystemExit(f'unexpected version: {current_version}')
 
@@ -479,6 +481,7 @@ def main() -> int:
 
     changelog = subparsers.add_parser('changelog')
     changelog.add_argument('-m', '--message', required=True)
+    changelog.add_argument('--only', choices=dists)
 
     materialize = subparsers.add_parser('materialize')
     materialize.add_argument('dist', choices=dists)
@@ -500,7 +503,7 @@ def main() -> int:
     if args.command == 'build':
         return _build(source=args.source)
     elif args.command == 'changelog':
-        return _changelog(args.message)
+        return _changelog(args.message, only=args.only)
     elif args.command == 'materialize':
         return _materialize(args.dist)
     elif args.command == 'update':
