@@ -418,13 +418,18 @@ def _changelog(message: str, *, only: str | None) -> int:
             '--show-field=version',
         ).strip()
 
-        parsed = re.fullmatch(r'^(.*)-1\+[a-z]+([0-9]+)$', current_version)
+        parsed = re.fullmatch(r'^(.*)-1\+([a-z]+)([0-9]+)$', current_version)
         if parsed is None:
             raise SystemExit(f'unexpected version: {current_version}')
 
+        if parsed[2] != dist:
+            new = 1
+        else:
+            new = int(parsed[3]) + 1
+
         _cmd_q(
             TOOLS, 'dch',
-            '--newversion', f'{parsed[1]}-1+{dist}{int(parsed[2]) + 1}',
+            '--newversion', f'{parsed[1]}-1+{dist}{new}',
             '--distribution', dist,
             '--force-distribution',
             '--changelog', f'changelogs/mainline/{dist}',
