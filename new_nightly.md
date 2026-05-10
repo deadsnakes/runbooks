@@ -1,8 +1,11 @@
 ## new nightly
 
 1. create repository
-    - add org secrets to repository
-    - add repo to automation team with `Write` permission
+1. add org secrets to repository
+    - https://github.com/organizations/deadsnakes/settings/secrets/actions
+1. add repo to automation team with `Write` permission
+    - https://github.com/orgs/deadsnakes/teams/automation/repositories
+    - **make sure to toggle it to `Write`**
 1. copy `main` branch from previous nightly
 
    ```bash
