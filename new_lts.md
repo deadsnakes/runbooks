@@ -19,6 +19,7 @@
 
     perform the following steps
 
+    1. edit the targets in `.github/workflows/main.yml`
     1. create new `debiandirs/<codename>`
        (often `cd debiandirs; ln -s $prev $codename`)
     1. create new `changelogs/{mainline,nightly}/<codename>`
