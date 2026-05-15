@@ -11,7 +11,7 @@ def main() -> int:
     parser.add_argument('--event', default='pull_request')
     args = parser.parse_args()
 
-    for filename in os.listdir('dockerfiles'):
+    for filename in sorted(os.listdir('dockerfiles')):
         _, name = filename.split('.')
         tag = f'ghcr.io/deadsnakes/{name}:latest'
         print(f' {tag} '.center(79, '='), flush=True)
