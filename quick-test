@@ -17,7 +17,7 @@ inst() {{
 apt-get update -qq
 
 if [ "$DISTRIB_CODENAME" = noble ]; then
-    apt-get install curl ca-certificates --no-install-recommends
+    apt-get install -y --no-install-recommends curl ca-certificates
     curl --silent --location --output out.deb \
         https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa/+files/libmpdec4_4.0.1-6+noble1_amd64.deb
     dpkg -i out.deb
