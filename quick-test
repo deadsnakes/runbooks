@@ -19,7 +19,9 @@ apt-get update -qq
 if [ "$DISTRIB_CODENAME" = noble ]; then
     apt-get install -y --no-install-recommends curl ca-certificates
     curl --silent --location --output out.deb \
-        https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa/+files/libmpdec4_4.0.1-6+noble1_amd64.deb
+        'https://github.com/deadsnakes/mpdecimal/releases/download/debian%2F4.0.1-6%2Bnoble1/libmpdec4_4.0.1-6+noble1_amd64.deb'
+    SHA=dcd313e077a9176579a11416566cb21435310d4c44bc487ab73313088c327d19
+    sha256sum --check <<< "$SHA  out.deb"
     dpkg -i out.deb
 fi
 
